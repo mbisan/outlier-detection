@@ -63,7 +63,7 @@ if ! [ -f ./semseg.zip ]; then
     wget https://dl.cv.ethz.ch/shift/discrete/images/train/front/semseg.zip
 fi
 if ! [ "$(ls -A ./semseg)" ]; then
-    unzip img.zip -d ./semseg
+    unzip semseg.zip -d ./semseg
 else
     echo "semseg directory not empty"
 fi
@@ -96,7 +96,7 @@ if ! [ -f ./semseg.zip ]; then
     wget https://dl.cv.ethz.ch/shift/discrete/images/val/front/semseg.zip
 fi
 if ! [ "$(ls -A ./semseg)" ]; then
-    unzip img.zip -d ./semseg
+    unzip semseg.zip -d ./semseg
 else
     echo "semseg directory not empty"
 fi
