@@ -58,7 +58,7 @@ def compute_per_class_counts(root_dir, split, save_dir):
     _ = list(results)
 
     df = pd.DataFrame(counts_matrix)
-    files = [x.replace(root_dir, "") for x in files]
+    files = [x.replace(root_dir + "/", "") for x in files]
     df["files"] = files
 
     df.to_csv(save_dir)
@@ -92,7 +92,8 @@ class ShiftDataset(Dataset):
             selected_ids = np.argwhere(
                 (counts > label_filter.min_amount) & (counts < label_filter.max_amount))
             self.files = [
-                os.path.join(dataset_dir, x) for x in class_counts["files"].to_numpy()[selected_ids]
+                os.path.join(dataset_dir, x.item())
+                for x in class_counts["files"].to_numpy()[selected_ids]
             ]
         else:
             self.files = walk_path(
