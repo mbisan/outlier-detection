@@ -3,40 +3,13 @@ from typing import Tuple
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 
+import numpy as np
 import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from torchvision.io.image import read_image
 
-def walk_path(root_dir, extension=".jpg"):
-    return [
-        os.path.join(looproot, filename) for looproot, _, filenames in os.walk(root_dir)
-            for filename in filenames if
-            (filename.endswith(extension) and os.path.isfile(os.path.join(looproot, filename)))
-        ]
-
-def process_file(file_array_tuple):
-    filename, array_chunk = file_array_tuple
-    lbl = read_image(filename)[0]
-    unique, counts = lbl.unique(return_counts=True)
-    array_chunk[unique.long()] = counts
-
-def compute_per_class_counts(root_dir, split, save_dir):
-
-    files = walk_path(
-        os.path.join(root_dir, "discrete/images", split, "front/semseg"), extension=".png")
-
-    counts_matrix = torch.zeros((len(files), len(shift_labels)), dtype=torch.int64)
-
-    with ThreadPoolExecutor() as executor:
-        results = executor.map(
-            process_file, [(files[i], counts_matrix[i]) for i in range(len(files))])
-    _ = list(results)
-
-    df = pd.DataFrame(counts_matrix)
-    df["files"] = files
-
-    df.to_csv(save_dir)
+from data.utils import walk_path
 
 ShiftLabel = namedtuple("ShiftLabel", ["id", "name", "rgb", "cityscapes", "ignore_in_eval"])
 
@@ -66,6 +39,30 @@ shift_labels = [
     ShiftLabel(22,'terrain',      (145, 170, 100),22, False   ),
 ]
 
+def process_file(file_array_tuple):
+    filename, array_chunk = file_array_tuple
+    lbl = read_image(filename)[0]
+    unique, counts = lbl.unique(return_counts=True)
+    array_chunk[unique.long()] = counts
+
+def compute_per_class_counts(root_dir, split, save_dir):
+
+    files = walk_path(
+        os.path.join(root_dir, "discrete/images", split, "front/semseg"), extension=".png")
+
+    counts_matrix = torch.zeros((len(files), len(shift_labels)), dtype=torch.int64)
+
+    with ThreadPoolExecutor() as executor:
+        results = executor.map(
+            process_file, [(files[i], counts_matrix[i]) for i in range(len(files))])
+    _ = list(results)
+
+    df = pd.DataFrame(counts_matrix)
+    files = [x.replace(root_dir, "") for x in files]
+    df["files"] = files
+
+    df.to_csv(save_dir)
+
 shift_label_mapping = {
     "normal": torch.tensor(
         [100, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
@@ -75,6 +72,8 @@ shift_label_mapping = {
         11, 12, 13, 14, 15, 16, 17, 18, 19, 20]).long(),
 }
 
+LabelFilter = namedtuple("LabelFilter", ["label_id", "min_amount", "max_amount"])
+
 class ShiftDataset(Dataset):
 
     def __init__(
@@ -82,12 +81,23 @@ class ShiftDataset(Dataset):
             dataset_dir,
             split,
             label_mapping = None,
+            label_filter: LabelFilter = None
             ) -> None:
         super().__init__()
         self.root_dir = os.path.join(dataset_dir, "discrete/images", split)
 
-        self.files = walk_path(
-            os.path.join(dataset_dir, "discrete/images", split, "front/img"), extension=".jpg")
+        if not label_filter is None:
+            class_counts = pd.read_csv(os.path.join(dataset_dir, f"counts_{split}.csv"))
+            counts = class_counts[label_filter.label_id].to_numpy()
+            selected_ids = np.argwhere(
+                (counts > label_filter.min_amount) & (counts < label_filter.max_amount))
+            self.files = [
+                os.path.join(dataset_dir, x) for x in class_counts["files"].to_numpy()[selected_ids]
+            ]
+        else:
+            self.files = walk_path(
+                os.path.join(dataset_dir, "discrete/images", split, "front/img"), extension=".jpg")
+
         self.label_mapping = label_mapping
 
     def __len__(self):
