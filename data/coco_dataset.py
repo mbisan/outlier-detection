@@ -5,6 +5,7 @@ import random
 import torch
 from torch.utils.data import Dataset
 from torchvision.io.image import read_image
+import torchvision.transforms.v2 as T
 from pycocotools.coco import COCO
 
 USED_CATEGORIES = [
@@ -19,12 +20,16 @@ class COCODataset(Dataset):
     def __init__(
             self,
             dataset_dir,
+            target_size,
+            max_size,
             sup_cats = None
             ) -> None:
         super().__init__()
         self.coco = COCO(
             os.path.join(dataset_dir, "annotations2014/annotations/instances_val2014.json"))
         self.img_dir = os.path.join(dataset_dir, "val2014/val2014")
+        self.size = target_size
+        self.max_size = max_size
 
         if not sup_cats is None:
             self.cat_ids = self.coco.getCatIds(supNms=sup_cats)
@@ -39,6 +44,9 @@ class COCODataset(Dataset):
         return len(self.img_ids)
 
     def __getitem__(self, index) -> Tuple[torch.Tensor, torch.Tensor]:
+        # reads coco image and returns the image randomly placed on an image of shape size x size
+        # and mask where the synthetic outlier is
+
         img = self.coco.imgs[self.img_ids[index]]
         img_path = os.path.join(self.img_dir, img["file_name"])
 
@@ -54,7 +62,28 @@ class COCODataset(Dataset):
         min_y = nz[1].min()
         max_y = nz[1].max()
 
-        mask = mask[min_x:max_x, min_y:max_y]
         rgb = rgb[:, min_x:max_x, min_y:max_y]
+        mask = torch.from_numpy(mask[min_x:max_x, min_y:max_y])
 
-        return (rgb, mask)
+        joint = torch.cat([rgb, mask.unsqueeze(0)], dim=0) # shape (4, w, h)
+
+        aspect_ratio = (max_x - min_x) / (max_y - min_y)
+        resize_size = random.randint(int(self.max_size/4), self.max_size)
+        if resize_size*aspect_ratio<resize_size:
+            resize_size = int(aspect_ratio*resize_size)
+
+        resized = T.functional.resize(joint, resize_size)
+        # resized = self.random_resize(joint)
+
+        rgb_final = torch.zeros((3, self.size, self.size), dtype=torch.uint8)
+        mask_final = torch.zeros((self.size, self.size), dtype=torch.uint8)
+
+        # random x position
+        x_shape, y_shape = resized.shape[1], resized.shape[2]
+        x_index = random.randint(0, self.size - x_shape)
+        y_index = random.randint(0, self.size - y_shape)
+
+        rgb_final[:, x_index:x_index+x_shape, y_index:y_index+y_shape] = resized[:3]
+        mask_final[x_index:x_index+x_shape, y_index:y_index+y_shape] = resized[3]
+
+        return (rgb_final, mask_final)
