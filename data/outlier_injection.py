@@ -1,6 +1,7 @@
 import numpy as np
 import torch
 from torch import nn
+import torchvision.transforms.v2 as T
 
 def match_histogram(source, target, zero_count = 0):
     '''
@@ -31,11 +32,13 @@ class OutlierInjection(nn.Module):
             self,
             alpha_blend: float = 1,
             histogram_matching: bool = False,
+            blur: int = 0
             ) -> None:
         super().__init__()
 
         self.alpha_blend = alpha_blend
         self.histogram_matching = histogram_matching
+        self.blur = blur
 
     def forward(
             self,
@@ -64,8 +67,11 @@ class OutlierInjection(nn.Module):
                     outlier[n, c] = match_histogram(
                         outlier[n, c], image[n, c], (outlier[n, c] == 0).sum())
 
+        label[mask.bool()] = 100
+        if self.blur>0:
+            mask = T.functional.gaussian_blur(mask, self.blur)
+
         image = image -self.alpha_blend*mask.unsqueeze(1)*image + self.alpha_blend * outlier
         image = image.type(torch.uint8)
-        label[mask.bool()] = 100
 
         return image, label
