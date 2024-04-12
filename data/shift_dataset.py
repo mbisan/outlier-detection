@@ -1,4 +1,5 @@
 import os
+import random
 from typing import Tuple
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
@@ -8,6 +9,7 @@ import pandas as pd
 import torch
 from torch.utils.data import Dataset
 from torchvision.io.image import read_image
+import torchvision.transforms.v2 as T
 
 from data.utils import walk_path
 
@@ -81,7 +83,10 @@ class ShiftDataset(Dataset):
             dataset_dir,
             split,
             label_mapping = None,
-            label_filter: LabelFilter = None
+            label_filter: LabelFilter = None,
+            horizon: float = 0,
+            target_size: int = None,
+            scale: Tuple[float] = (.5, 1.5)
             ) -> None:
         super().__init__()
         self.root_dir = os.path.join(dataset_dir, "discrete/images", split)
@@ -100,6 +105,11 @@ class ShiftDataset(Dataset):
                 os.path.join(dataset_dir, "discrete/images", split, "front/img"), extension=".jpg")
 
         self.label_mapping = label_mapping
+        self.horizon = horizon
+        self.target_size = target_size
+        self.scale = scale
+
+        self.random_flip = T.RandomHorizontalFlip(p=.5)
 
     def __len__(self):
         return len(self.files)
@@ -113,7 +123,29 @@ class ShiftDataset(Dataset):
         if not self.label_mapping is None:
             lbl = self.label_mapping[lbl]
 
-        return (rgb, lbl)
+        if not self.target_size is None:
+            # scale the image from half size to 50% extra size, and take a random square crop
+            scale = random.uniform(self.scale[0], self.scale[1])
+            joint = torch.cat([rgb, lbl.unsqueeze(0)], dim=0)
+            new_size = int(scale * min(joint.size[1], joint.size[2]))
+
+            resized = T.functional.resize(joint, new_size)
+            resized = self.random_flip(resized)
+
+            # get random crop
+            x_index = random.randint(0, resized.shape[1] - self.target_size)
+            y_index = random.randint(0, resized.shape[2] - self.target_size)
+
+            # horizon position
+            horizon = int(resized.shape[2] * self.horizon - y_index)
+
+            return (
+                resized[:3, x_index:x_index+self.target_size, y_index:y_index+self.target_size],
+                resized[3, x_index:x_index+self.target_size, y_index:y_index+self.target_size],
+                horizon
+                )
+
+        return (rgb, lbl, 0)
 
 if __name__ == "__main__":
     compute_per_class_counts("./datasets/SHIFT", "val", "./datasets/SHIFT/counts_val.csv")
