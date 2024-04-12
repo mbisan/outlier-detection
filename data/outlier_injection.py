@@ -1,9 +1,11 @@
+import random
+
 import numpy as np
 import torch
 from torch import nn
 import torchvision.transforms.v2 as T
 
-def match_histogram(source, target, zero_count = 0):
+def match_histogram(source, target):
     '''
     Returns the source image with the histograms matching those of target
 
@@ -11,10 +13,9 @@ def match_histogram(source, target, zero_count = 0):
     '''
     _, source_lookup, source_counts = torch.unique(
         source, return_counts=True, return_inverse=True)
-    source_counts[0] -= zero_count
     target_values, target_counts = torch.unique(target, return_counts=True)
 
-    cpf_source = torch.cumsum(source_counts, 0) / (source.numel()-zero_count)
+    cpf_source = torch.cumsum(source_counts, 0) / source.numel()
     cpf_target = torch.cumsum(target_counts, 0) / target.numel()
 
     interp_val = torch.tensor(
@@ -45,33 +46,42 @@ class OutlierInjection(nn.Module):
             image: torch.Tensor,
             label: torch.Tensor,
             outlier: torch.Tensor,
-            mask: torch.Tensor):
+            mask: torch.Tensor,
+            horizon: float):
         '''
-            Image of shape (n, 3, w, h)
-            Outlier of shape (n, 3, w, h)
-            Mask of shape (n, w, h)
-            Label of shape (n, w, h)
+            Image of shape (3, w, h)
+            Label of shape (w, h)
+            Outlier of shape (3, w', h')
+            outlier_mask of shape (w', h')
+            Horizon: int
 
-            Puts outlier at the position in the mask on the image
+            Puts outlier at a random position on the image
                 pasting is done with:
                     alpha blending
                     histogram matching
+                    if possible, pasting is done below the "horizon" line
             Sets the labels at the position of the mask to the ignore label
 
             returns the images with the synthetic outliers, and modified labels
-            outlier and mask tensors are not used
         '''
         if self.histogram_matching:
-            for n in range(image.shape[0]):
-                for c in range(image.shape[1]):
-                    outlier[n, c] = match_histogram(
-                        outlier[n, c], image[n, c], (outlier[n, c] == 0).sum())
+            for c in range(image.shape[0]):
+                outlier[c] = match_histogram(outlier[c], image[c])
 
-        label[mask.bool()] = 100
+        # paste
+        x_ood, y_ood = outlier.shape[1], outlier.shape[2]
+        x_shape, y_shape = image.shape[1], image.shape[2]
+        x_index = random.randint(min(max(horizon, 0), x_shape - x_ood), x_shape - x_ood)
+        y_index = random.randint(0, y_shape - y_ood)
+
+        # update labels and blur the outlier mask for pasting
+        label[x_index:x_index+x_ood, y_index:y_index+y_ood][mask.bool()] = 101
         if self.blur>0:
-            mask = T.functional.gaussian_blur(mask, self.blur)
+            mask = T.functional.gaussian_blur(mask.unsqueeze(0), self.blur)[0]
 
-        image = image -self.alpha_blend*mask.unsqueeze(1)*image + self.alpha_blend * outlier
-        image = image.type(torch.uint8)
+        # paste
+        image[:, x_index:x_index+x_ood, y_index:y_index+y_ood] = \
+            image[:, x_index:x_index+x_ood, y_index:y_index+y_ood] - self.alpha_blend*mask.unsqueeze(0)*image[:, x_index:x_index+x_ood, y_index:y_index+y_ood] + \
+                self.alpha_blend * outlier * mask.unsqueeze(0)
 
         return image, label
