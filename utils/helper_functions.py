@@ -46,9 +46,10 @@ def load_shift_segmentation(
 
     train_dataset = RandomCropFlipDataset(shift_train, training_size, scale=(.65, 1.5))
     # create dataloaders
-    train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=num_workers)
-    val_dataloader = DataLoader(shift_val, batch_size, shuffle=False, num_workers=num_workers)
-    test_dataloader = DataLoader(shift_test, batch_size, shuffle=False, num_workers=num_workers)
+    train_dataloader = DataLoader(
+        train_dataset, batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
+    val_dataloader = DataLoader(shift_val, batch_size//4, shuffle=False, num_workers=num_workers)
+    test_dataloader = DataLoader(shift_test, batch_size//4, shuffle=False, num_workers=num_workers)
 
     return (train_dataloader, val_dataloader, test_dataloader)
 
@@ -110,9 +111,10 @@ def load_shift_ood(
     )
 
     # create dataloaders
-    train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=num_workers)
-    val_dataloader = DataLoader(val_dataset, batch_size, shuffle=False, num_workers=num_workers)
-    test_dataloader = DataLoader(shift_test, batch_size, shuffle=False, num_workers=num_workers)
+    train_dataloader = DataLoader(
+        train_dataset, batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
+    val_dataloader = DataLoader(val_dataset, batch_size//4, shuffle=False, num_workers=num_workers)
+    test_dataloader = DataLoader(shift_test, batch_size//4, shuffle=False, num_workers=num_workers)
 
     return (train_dataloader, val_dataloader, test_dataloader)
 
@@ -138,11 +140,11 @@ def load_streethazards_segmentation(
     train_dataset = RandomCropFlipDataset(streethazards_train, training_size, scale=(.75, 1.5))
     # create dataloaders
     train_dataloader = DataLoader(
-        train_dataset, batch_size, shuffle=True, num_workers=num_workers)
+        train_dataset, batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
     val_dataloader = DataLoader(
-        streethazards_val, batch_size, shuffle=False, num_workers=num_workers)
+        streethazards_val, batch_size//4, shuffle=False, num_workers=num_workers)
     test_dataloader = DataLoader(
-        streethazards_test, batch_size, shuffle=False, num_workers=num_workers)
+        streethazards_test, batch_size//4, shuffle=False, num_workers=num_workers)
 
     return (train_dataloader, val_dataloader, test_dataloader)
 
@@ -188,10 +190,10 @@ def load_streethazards_ood(
 
     # create dataloaders
     train_dataloader = DataLoader(
-        train_dataset, batch_size, shuffle=True, num_workers=num_workers)
+        train_dataset, batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
     val_dataloader = DataLoader(
-        val_dataset, batch_size, shuffle=False, num_workers=num_workers)
+        val_dataset, batch_size//4, shuffle=False, num_workers=num_workers)
     test_dataloader = DataLoader(
-        streethazards_test, batch_size, shuffle=False, num_workers=num_workers)
+        streethazards_test, batch_size//4, shuffle=False, num_workers=num_workers)
 
     return (train_dataloader, val_dataloader, test_dataloader)
