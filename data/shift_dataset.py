@@ -76,6 +76,9 @@ shift_label_mapping = {
 
 LabelFilter = namedtuple("LabelFilter", ["label_id", "min_amount", "max_amount"])
 
+no_pedestrian_filter = LabelFilter("4", -1, 0)
+pedestrian_filter_10_15k = LabelFilter("4", 10000, 15000)
+
 class ShiftDataset(Dataset):
 
     def __init__(
@@ -92,14 +95,15 @@ class ShiftDataset(Dataset):
             class_counts = pd.read_csv(os.path.join(dataset_dir, f"counts_{split}.csv"))
             counts = class_counts[label_filter.label_id].to_numpy()
             selected_ids = np.argwhere(
-                (counts > label_filter.min_amount) & (counts < label_filter.max_amount))
+                (counts > label_filter.min_amount) & (counts <= label_filter.max_amount))
             self.files = [
                 os.path.join(dataset_dir, x.item())
                 for x in class_counts["files"].to_numpy()[selected_ids]
             ]
         else:
             self.files = walk_path(
-                os.path.join(dataset_dir, "discrete/images", split, "front/img"), extension=".jpg")
+                os.path.join(
+                    dataset_dir, "discrete/images", split, "front/semseg"), extension=".png")
 
         self.label_mapping = label_mapping
 
@@ -107,8 +111,8 @@ class ShiftDataset(Dataset):
         return len(self.files)
 
     def __getitem__(self, index) -> Tuple[torch.Tensor, torch.Tensor]:
-        img_path = self.files[index]
-        lbl_path = img_path.replace("img/", "semseg/").replace("img_front.jpg", "semseg_front.png")
+        lbl_path = self.files[index]
+        img_path = lbl_path.replace("semseg/", "img/").replace("semseg_front.png", "img_front.jpg")
         rgb = read_image(img_path) # shape (3, w, h)
         lbl = read_image(lbl_path)[0].long() # shape (w, h)
 

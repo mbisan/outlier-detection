@@ -44,7 +44,6 @@ def load_shift_segmentation(
         label_mapping=shift_label_mapping[label_mapping], label_filter=test_label_filter)
 
     train_dataset = RandomCropFlipDataset(shift_train, training_size, scale=(.65, 1.5))
-
     # create dataloaders
     train_dataloader = DataLoader(train_dataset, batch_size, shuffle=True, num_workers=num_workers)
     val_dataloader = DataLoader(shift_val, batch_size, shuffle=False, num_workers=num_workers)
