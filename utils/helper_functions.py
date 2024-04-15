@@ -1,199 +1,255 @@
 import random
 
 from torch.utils.data import DataLoader
+from pytorch_lightning import LightningDataModule
 
 from data.shift_dataset import ShiftDataset, LabelFilter, shift_label_mapping
 from data.streethazards_dataset import StreetHazardsDataset, streethazards_label_mapping
 from data.coco_dataset import COCODataset, USED_CATEGORIES
 from data.dataset_handler import RandomCropFlipDataset, OutlierDataset
 
-def load_shift_segmentation(
-        dataset_dir: str,
-        training_size: int,
-        batch_size: int,
-        label_filter: LabelFilter = None,
-        test_label_filter: LabelFilter = None,
-        label_mapping: str = "normal",
-        num_workers: int = 8,
-        val_amount: float = .05
-    ):
-    '''
-        Loads the Shift Dataset (train and val splits)
+class ShiftSegmentationDataModule(LightningDataModule):
 
-        The train split is randomly split again
-    '''
+    def __init__(self,
+            dataset_dir: str,
+            training_size: int,
+            batch_size: int,
+            label_filter: LabelFilter = None,
+            test_label_filter: LabelFilter = None,
+            label_mapping: str = "normal",
+            num_workers: int = 8,
+            val_amount: float = .05) -> None:
+        '''
+            Loads the Shift Dataset (train and val splits)
 
-    shift_train = ShiftDataset(
-        dataset_dir, "train",
-        label_mapping=shift_label_mapping[label_mapping], label_filter=label_filter)
-    shift_val = ShiftDataset( # shift_val will be empty
-        dataset_dir, "train",
-        label_mapping=shift_label_mapping[label_mapping], label_filter=LabelFilter("0", 1e10, 1e11))
+            The train split is randomly split again
+        '''
+        super().__init__()
 
-    random.shuffle(shift_train.files)
-    train_num_images = int((1-val_amount)*len(shift_train.files))
-    train_images = shift_train.files[:train_num_images]
-    val_images = shift_train.files[train_num_images:]
+        self.batch_size = batch_size
+        self.num_workers = num_workers
 
-    shift_train.files = train_images
-    shift_val.files = val_images
+        shift_train = ShiftDataset(
+            dataset_dir, "train",
+            label_mapping=shift_label_mapping[label_mapping],
+            label_filter=label_filter)
+        self.shift_val = ShiftDataset( # shift_val will be empty
+            dataset_dir, "train",
+            label_mapping=shift_label_mapping[label_mapping],
+            label_filter=LabelFilter("0", 1e10, 1e11))
 
-    # we might want to load the test dataset with other kind of filtering of labels
-    # the test
-    shift_test = ShiftDataset(
-        dataset_dir, "val",
-        label_mapping=shift_label_mapping[label_mapping], label_filter=test_label_filter)
+        random.shuffle(shift_train.files)
+        train_num_images = int((1-val_amount)*len(shift_train.files))
+        train_images = shift_train.files[:train_num_images]
+        val_images = shift_train.files[train_num_images:]
 
-    train_dataset = RandomCropFlipDataset(shift_train, training_size, scale=(.65, 1.5))
-    # create dataloaders
-    train_dataloader = DataLoader(
-        train_dataset, batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
-    val_dataloader = DataLoader(shift_val, batch_size//4, shuffle=False, num_workers=num_workers)
-    test_dataloader = DataLoader(shift_test, batch_size//4, shuffle=False, num_workers=num_workers)
+        shift_train.files = train_images
+        self.shift_val.files = val_images
 
-    return (train_dataloader, val_dataloader, test_dataloader)
+        # we might want to load the test dataset with other kind of filtering of labels
+        # the test
+        self.shift_test = ShiftDataset(
+            dataset_dir, "val",
+            label_mapping=shift_label_mapping[label_mapping], label_filter=test_label_filter)
 
-def load_shift_ood(
-        dataset_dir: str,
-        training_size: int,
-        outlier_dir: str,
-        outlier_max_size: int,
-        batch_size: int,
-        label_filter: LabelFilter = None,
-        test_label_filter: LabelFilter = None,
-        label_mapping: str = "normal",
-        horizon: float = 0,
-        alpha_blend: float = 1,
-        histogram_matching: bool = False,
-        blur: int = 0,
-        num_workers: int = 8,
-        val_amount: float = .05
-    ):
-    '''
-        Loads the Shift Dataset (train and val splits)
+        self.train_dataset = RandomCropFlipDataset(shift_train, training_size, scale=(.65, 1.5))
 
-        The train split is randomly split again
-    '''
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.train_dataset, self.batch_size, shuffle=True,
+            num_workers=self.num_workers, drop_last=True)
 
-    # load the outlier dataset
-    coco_dataset = COCODataset(
-        outlier_dir, outlier_max_size, USED_CATEGORIES
-    )
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.shift_val, self.batch_size//4, shuffle=False, num_workers=self.num_workers)
 
-    shift_train = ShiftDataset(
-        dataset_dir, "train",
-        label_mapping=shift_label_mapping[label_mapping], label_filter=label_filter)
-    shift_val = ShiftDataset( # shift_val will be empty
-        dataset_dir, "train",
-        label_mapping=shift_label_mapping[label_mapping], label_filter=LabelFilter("0", 1e10, 1e11))
-
-    random.shuffle(shift_train.files)
-    train_num_images = int((1-val_amount)*len(shift_train.files))
-    train_images = shift_train.files[:train_num_images]
-    val_images = shift_train.files[train_num_images:]
-
-    shift_train.files = train_images
-    shift_val.files = val_images
-
-    # we might want to load the test dataset with other kind of filtering of labels
-    # the test
-    shift_test = ShiftDataset(
-        dataset_dir, "val",
-        label_mapping=shift_label_mapping[label_mapping], label_filter=test_label_filter)
-
-    train_dataset = OutlierDataset(
-        shift_train, coco_dataset, training_size, scale=(.65, 1.5),
-        horizon=horizon, alpha_blend=alpha_blend, histogram_matching=histogram_matching, blur=blur
-    )
-    val_dataset = OutlierDataset(
-        shift_val, coco_dataset, training_size, scale=(.65, 1.5),
-        horizon=horizon, alpha_blend=alpha_blend, histogram_matching=histogram_matching, blur=blur
-    )
-
-    # create dataloaders
-    train_dataloader = DataLoader(
-        train_dataset, batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
-    val_dataloader = DataLoader(val_dataset, batch_size//4, shuffle=False, num_workers=num_workers)
-    test_dataloader = DataLoader(shift_test, batch_size//4, shuffle=False, num_workers=num_workers)
-
-    return (train_dataloader, val_dataloader, test_dataloader)
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.shift_test, self.batch_size//4, shuffle=False, num_workers=self.num_workers)
 
 
-def load_streethazards_segmentation(
-        dataset_dir: str,
-        training_size: int,
-        batch_size: int,
-        label_mapping: str = "normal",
-        num_workers: int = 8,
-    ):
-    '''
-        Loads the StreetHazards Dataset (train, val and test splits)
-    '''
+class ShiftOODDataModule(LightningDataModule):
 
-    streethazards_train = StreetHazardsDataset(
-        dataset_dir, "train", label_mapping=streethazards_label_mapping[label_mapping])
-    streethazards_val = StreetHazardsDataset(
-        dataset_dir, "val", label_mapping=streethazards_label_mapping[label_mapping])
-    streethazards_test = StreetHazardsDataset(
-        dataset_dir, "test", label_mapping=streethazards_label_mapping[label_mapping])
+    def __init__(self,
+            dataset_dir: str,
+            training_size: int,
+            outlier_dir: str,
+            outlier_max_size: int,
+            batch_size: int,
+            label_filter: LabelFilter = None,
+            test_label_filter: LabelFilter = None,
+            label_mapping: str = "normal",
+            horizon: float = 0,
+            alpha_blend: float = 1,
+            histogram_matching: bool = False,
+            blur: int = 0,
+            num_workers: int = 8,
+            val_amount: float = .05
+        ) -> None:
+        '''
+            Loads the Shift Dataset (train and val splits)
 
-    train_dataset = RandomCropFlipDataset(streethazards_train, training_size, scale=(.75, 1.5))
-    # create dataloaders
-    train_dataloader = DataLoader(
-        train_dataset, batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
-    val_dataloader = DataLoader(
-        streethazards_val, batch_size//4, shuffle=False, num_workers=num_workers)
-    test_dataloader = DataLoader(
-        streethazards_test, batch_size//4, shuffle=False, num_workers=num_workers)
+            The train split is randomly split again
+        '''
+        super().__init__()
 
-    return (train_dataloader, val_dataloader, test_dataloader)
+        self.batch_size = batch_size
+        self.num_workers = num_workers
 
-def load_streethazards_ood(
-        dataset_dir: str,
-        training_size: int,
-        outlier_dir: str,
-        outlier_max_size: int,
-        batch_size: int,
-        label_mapping: str = "normal",
-        horizon: float = 0,
-        alpha_blend: float = 1,
-        histogram_matching: bool = False,
-        blur: int = 0,
-        num_workers: int = 8,
-    ):
-    '''
-        Loads the Shift Dataset (train and val splits)
+        # load the outlier dataset
+        coco_dataset = COCODataset(
+            outlier_dir, outlier_max_size, USED_CATEGORIES
+        )
 
-        The train split is randomly split again
-    '''
+        shift_train = ShiftDataset(
+            dataset_dir, "train",
+            label_mapping=shift_label_mapping[label_mapping], label_filter=label_filter)
+        shift_val = ShiftDataset( # shift_val will be empty
+            dataset_dir, "train",
+            label_mapping=shift_label_mapping[label_mapping],
+            label_filter=LabelFilter("0", 1e10, 1e11))
 
-    # load the outlier dataset
-    coco_dataset = COCODataset(
-        outlier_dir, outlier_max_size, USED_CATEGORIES
-    )
+        random.shuffle(shift_train.files)
+        train_num_images = int((1-val_amount)*len(shift_train.files))
+        train_images = shift_train.files[:train_num_images]
+        val_images = shift_train.files[train_num_images:]
 
-    streethazards_train = StreetHazardsDataset(
-        dataset_dir, "train", label_mapping=streethazards_label_mapping[label_mapping])
-    streethazards_val = StreetHazardsDataset(
-        dataset_dir, "val", label_mapping=streethazards_label_mapping[label_mapping])
-    streethazards_test = StreetHazardsDataset(
-        dataset_dir, "test", label_mapping=streethazards_label_mapping[label_mapping])
+        shift_train.files = train_images
+        shift_val.files = val_images
 
-    train_dataset = OutlierDataset(
-        streethazards_train, coco_dataset, training_size, scale=(.75, 1.5),
-        horizon=horizon, alpha_blend=alpha_blend, histogram_matching=histogram_matching, blur=blur
-    )
-    val_dataset = OutlierDataset(
-        streethazards_val, coco_dataset, training_size, scale=(.75, 1.5),
-        horizon=horizon, alpha_blend=alpha_blend, histogram_matching=histogram_matching, blur=blur
-    )
+        # we might want to load the test dataset with other kind of filtering of labels
+        # the test
+        self.shift_test = ShiftDataset(
+            dataset_dir, "val",
+            label_mapping=shift_label_mapping[label_mapping], label_filter=test_label_filter)
 
-    # create dataloaders
-    train_dataloader = DataLoader(
-        train_dataset, batch_size, shuffle=True, num_workers=num_workers, drop_last=True)
-    val_dataloader = DataLoader(
-        val_dataset, batch_size//4, shuffle=False, num_workers=num_workers)
-    test_dataloader = DataLoader(
-        streethazards_test, batch_size//4, shuffle=False, num_workers=num_workers)
+        self.train_dataset = OutlierDataset(
+            shift_train, coco_dataset, training_size, scale=(.65, 1.5),
+            horizon=horizon, alpha_blend=alpha_blend,
+            histogram_matching=histogram_matching, blur=blur
+        )
+        self.val_dataset = OutlierDataset(
+            shift_val, coco_dataset, training_size, scale=(.65, 1.5),
+            horizon=horizon, alpha_blend=alpha_blend,
+            histogram_matching=histogram_matching, blur=blur
+        )
 
-    return (train_dataloader, val_dataloader, test_dataloader)
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.train_dataset, self.batch_size, shuffle=True,
+            num_workers=self.num_workers, drop_last=True)
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.val_dataset, self.batch_size//4, shuffle=False, num_workers=self.num_workers)
+
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.shift_test, self.batch_size//4, shuffle=False, num_workers=self.num_workers)
+
+
+class StreetHazardsDataModule(LightningDataModule):
+
+    def __init__(self,
+            dataset_dir: str,
+            training_size: int,
+            batch_size: int,
+            label_mapping: str = "normal",
+            num_workers: int = 8
+        ) -> None:
+        '''
+            Loads the StreetHazards Dataset (train, val and test splits)
+        '''
+        super().__init__()
+
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+
+        streethazards_train = StreetHazardsDataset(
+            dataset_dir, "train", label_mapping=streethazards_label_mapping[label_mapping])
+        self.streethazards_val = StreetHazardsDataset(
+            dataset_dir, "val", label_mapping=streethazards_label_mapping[label_mapping])
+        self.streethazards_test = StreetHazardsDataset(
+            dataset_dir, "test", label_mapping=streethazards_label_mapping[label_mapping])
+
+        self.train_dataset = RandomCropFlipDataset(
+            streethazards_train, training_size, scale=(.75, 1.5))
+
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.train_dataset, self.batch_size, shuffle=True,
+            num_workers=self.num_workers, drop_last=True)
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.streethazards_val, self.batch_size//4,
+            shuffle=False, num_workers=self.num_workers)
+
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.streethazards_test, self.batch_size//4,
+            shuffle=False, num_workers=self.num_workers)
+
+
+class StreetHazardsOODDataModule(LightningDataModule):
+
+    def __init__(self,
+            dataset_dir: str,
+            training_size: int,
+            outlier_dir: str,
+            outlier_max_size: int,
+            batch_size: int,
+            label_mapping: str = "normal",
+            horizon: float = 0,
+            alpha_blend: float = 1,
+            histogram_matching: bool = False,
+            blur: int = 0,
+            num_workers: int = 8
+        ) -> None:
+        '''
+            Loads the Shift Dataset (train and val splits)
+
+            The train split is randomly split again
+        '''
+        super().__init__()
+
+        self.batch_size = batch_size
+        self.num_workers = num_workers
+
+        # load the outlier dataset
+        coco_dataset = COCODataset(
+            outlier_dir, outlier_max_size, USED_CATEGORIES
+        )
+
+        streethazards_train = StreetHazardsDataset(
+            dataset_dir, "train", label_mapping=streethazards_label_mapping[label_mapping])
+        streethazards_val = StreetHazardsDataset(
+            dataset_dir, "val", label_mapping=streethazards_label_mapping[label_mapping])
+        self.streethazards_test = StreetHazardsDataset(
+            dataset_dir, "test", label_mapping=streethazards_label_mapping[label_mapping])
+
+        self.train_dataset = OutlierDataset(
+            streethazards_train, coco_dataset, training_size, scale=(.75, 1.5),
+            horizon=horizon, alpha_blend=alpha_blend,
+            histogram_matching=histogram_matching, blur=blur
+        )
+        self.val_dataset = OutlierDataset(
+            streethazards_val, coco_dataset, training_size, scale=(.75, 1.5),
+            horizon=horizon, alpha_blend=alpha_blend,
+            histogram_matching=histogram_matching, blur=blur
+        )
+
+    def train_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.train_dataset, self.batch_size, shuffle=True,
+            num_workers=self.num_workers, drop_last=True)
+
+    def val_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.val_dataset, self.batch_size//4,
+            shuffle=False, num_workers=self.num_workers)
+
+    def test_dataloader(self) -> DataLoader:
+        return DataLoader(
+            self.streethazards_test, self.batch_size//4,
+            shuffle=False, num_workers=self.num_workers)

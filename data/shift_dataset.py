@@ -119,6 +119,9 @@ class ShiftDataset(Dataset):
         if not self.label_mapping is None:
             lbl = self.label_mapping[lbl]
 
+        if lbl.unique().shape[0] > 23:
+            print(lbl_path, lbl.unique())
+
         return (rgb, lbl)
 
 if __name__ == "__main__":

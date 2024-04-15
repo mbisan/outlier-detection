@@ -47,7 +47,7 @@ class OutlierDataset(Dataset):
         joint = torch.cat([rgb, lbl.unsqueeze(0)], dim=0)
         new_size = int(scale * min(joint.shape[1], joint.shape[2]))
 
-        resized = T.functional.resize(joint, new_size)
+        resized = T.functional.resize(joint, new_size, interpolation=T.InterpolationMode.NEAREST)
         resized = self.random_flip(resized)
 
         # get random crop
@@ -98,7 +98,7 @@ class RandomCropFlipDataset(Dataset):
         joint = torch.cat([rgb, lbl.unsqueeze(0)], dim=0)
         new_size = int(scale * min(joint.shape[1], joint.shape[2]))
 
-        resized = T.functional.resize(joint, new_size)
+        resized = T.functional.resize(joint, new_size, interpolation=T.InterpolationMode.NEAREST)
         resized = self.random_flip(resized)
 
         # get random crop

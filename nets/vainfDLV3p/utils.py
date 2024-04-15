@@ -69,7 +69,7 @@ class IntermediateLayerGetter(nn.ModuleDict):
         self.return_layers = orig_return_layers
 
     def forward(self, x):
-        out = OrderedDict()
+        out = []
         for name, module in self.named_children():
             if self.hrnet_flag and name.startswith('transition'): # if using hrnet, you need to take care of transition
                 if name == 'transition1': # in transition1, you need to split the module to two streams first
@@ -80,14 +80,13 @@ class IntermediateLayerGetter(nn.ModuleDict):
                 x = module(x)
 
             if name in self.return_layers:
-                out_name = self.return_layers[name]
                 if name == 'stage4' and self.hrnet_flag: # In HRNetV2, we upsample and concat all outputs streams together
                     output_h, output_w = x[0].size(2), x[0].size(3)  # Upsample to size of highest resolution stream
                     x1 = F.interpolate(x[1], size=(output_h, output_w), mode='bilinear', align_corners=False)
                     x2 = F.interpolate(x[2], size=(output_h, output_w), mode='bilinear', align_corners=False)
                     x3 = F.interpolate(x[3], size=(output_h, output_w), mode='bilinear', align_corners=False)
                     x = torch.cat([x[0], x1, x2, x3], dim=1)
-                    out[out_name] = x
+                    out.append(x)
                 else:
-                    out[out_name] = x
+                    out.append(x)
         return out

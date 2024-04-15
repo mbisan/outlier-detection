@@ -75,7 +75,8 @@ class COCODataset(Dataset):
             new_width = new_size
             new_height = int(new_width / aspect_ratio)
 
-        resized = T.functional.resize(joint, (new_height, new_width))
+        resized = T.functional.resize(
+            joint, (new_height, new_width), interpolation=T.InterpolationMode.NEAREST)
         # resized = self.random_resize(joint)
 
         return (resized[:3], resized[3])
