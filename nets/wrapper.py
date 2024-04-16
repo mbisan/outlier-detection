@@ -5,7 +5,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau
 from pytorch_lightning import LightningModule
 import torchmetrics as tm
 
-from nets.vainfDLV3p.modeling import (
+from nets.model import (
     deeplabv3plus_resnet50, deeplabv3plus_resnet101, deeplabv3plus_hrnetv2_32,
     deeplabv3plus_mobilenet, deeplabv3plus_resnet34
 )
