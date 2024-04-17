@@ -9,14 +9,15 @@ from nets.wrapper import Wrapper
 #     "./datasets/StreetHazards", 512, 8, "normal", 8)
 
 dm = ShiftSegmentationDataModule(
-    "./datasets/SHIFT", 512, 6, LabelFilter("4", -1, 0), LabelFilter("4", -1, 0), "ood_pedestrian", 8, .05)
+    "./datasets/SHIFT", 512, 16, LabelFilter("4", -1, 0), LabelFilter("4", -1, 0), "ood_pedestrian", 8, .05)
 
 model = Wrapper("resnet50", 22, .0001)
 
 ckpt = ModelCheckpoint(
         monitor="val_miou",
         mode="max",
-        save_top_k=4,
+        save_top_k=2,
+        save_last=True,
         filename='{epoch}-{step}-{val_miou:.4f}'
     )
 
