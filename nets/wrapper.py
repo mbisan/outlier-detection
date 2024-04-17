@@ -34,10 +34,10 @@ class Wrapper(LightningModule):
         self.jaccard_index = tm.JaccardIndex(
             task="multiclass", num_classes=num_classes, ignore_index=100)
         self.auroc = tm.AUROC(
-            task="multiclass", num_classes=num_classes, thresholds=200,
+            task="multiclass", num_classes=num_classes, thresholds=100,
             average="macro", ignore_index=100)
         self.average_precision = tm.AveragePrecision(
-            task="multiclass", num_classes=num_classes, thresholds=200,
+            task="multiclass", num_classes=num_classes, thresholds=100,
             average="macro", ignore_index=100)
 
         self.lr = lr
@@ -72,8 +72,8 @@ class Wrapper(LightningModule):
         out_proba = out.softmax(dim=1)
 
         self.jaccard_index.update(out_proba, label)
-        self.auroc.update(out_proba, label)
-        self.average_precision.update(out_proba, label)
+        # self.auroc.update(out_proba, label)
+        # self.average_precision.update(out_proba, label)
 
         return loss.float()
 
@@ -87,12 +87,12 @@ class Wrapper(LightningModule):
         self.log(
             "val_miou", self.jaccard_index, on_epoch=True,
             on_step=False, prog_bar=True, logger=True)
-        self.log(
-            "val_auroc", self.auroc, on_epoch=True,
-            on_step=False, prog_bar=True, logger=True)
-        self.log(
-            "val_ap", self.average_precision, on_epoch=True,
-            on_step=False, prog_bar=True, logger=True)
+        # self.log(
+        #     "val_auroc", self.auroc, on_epoch=True,
+        #     on_step=False, prog_bar=True, logger=True)
+        # self.log(
+        #     "val_ap", self.average_precision, on_epoch=True,
+        #     on_step=False, prog_bar=True, logger=True)
 
         return loss
 
@@ -102,7 +102,7 @@ class Wrapper(LightningModule):
 
         self.log(
             "test_loss", loss, on_epoch=True,
-            on_step=True, prog_bar=True, logger=True)
+            on_step=False, prog_bar=True, logger=True)
         self.log(
             "test_miou", self.jaccard_index, on_epoch=True,
             on_step=False, prog_bar=True, logger=True)

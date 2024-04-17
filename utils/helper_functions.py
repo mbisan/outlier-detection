@@ -61,11 +61,11 @@ class ShiftSegmentationDataModule(LightningDataModule):
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.shift_val, self.batch_size//4, shuffle=False, num_workers=self.num_workers)
+            self.shift_val, self.batch_size, shuffle=False, num_workers=self.num_workers)
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.shift_test, self.batch_size//4, shuffle=False, num_workers=self.num_workers)
+            self.shift_test, self.batch_size, shuffle=False, num_workers=self.num_workers)
 
 
 class ShiftOODDataModule(LightningDataModule):
@@ -141,11 +141,11 @@ class ShiftOODDataModule(LightningDataModule):
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.val_dataset, self.batch_size//4, shuffle=False, num_workers=self.num_workers)
+            self.val_dataset, self.batch_size, shuffle=False, num_workers=self.num_workers)
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.shift_test, self.batch_size//4, shuffle=False, num_workers=self.num_workers)
+            self.shift_test, self.batch_size, shuffle=False, num_workers=self.num_workers)
 
 
 class StreetHazardsDataModule(LightningDataModule):
@@ -182,12 +182,12 @@ class StreetHazardsDataModule(LightningDataModule):
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.streethazards_val, self.batch_size//4,
+            self.streethazards_val, self.batch_size,
             shuffle=False, num_workers=self.num_workers)
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.streethazards_test, self.batch_size//4,
+            self.streethazards_test, self.batch_size,
             shuffle=False, num_workers=self.num_workers)
 
 
@@ -246,10 +246,10 @@ class StreetHazardsOODDataModule(LightningDataModule):
 
     def val_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.val_dataset, self.batch_size//4,
+            self.val_dataset, self.batch_size,
             shuffle=False, num_workers=self.num_workers)
 
     def test_dataloader(self) -> DataLoader:
         return DataLoader(
-            self.streethazards_test, self.batch_size//4,
+            self.streethazards_test, self.batch_size,
             shuffle=False, num_workers=self.num_workers)

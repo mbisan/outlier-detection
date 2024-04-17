@@ -3,60 +3,6 @@
 mkdir datasets
 cd datasets
 
-mkdir StreetHazards
-cd StreetHazards
-
-if ! [ -f ./streethazards_train.tar ]; then
-    echo "Downloading StreetHazards train"
-    wget https://people.eecs.berkeley.edu/~hendrycks/streethazards_train.tar
-fi
-mkdir streethazards_train
-if ! [ "$(ls -A ./streethazards_train)" ]; then
-    tar -xf streethazards_train.tar -C ./streethazards_train
-else
-    echo "streethazards_train directory not empty"
-fi
-
-if ! [ -f ./streethazards_test.tar ]; then
-    echo "Downloading StreetHazards"
-    wget https://people.eecs.berkeley.edu/~hendrycks/streethazards_test.tar
-fi
-mkdir streethazards_test
-if ! [ "$(ls -A ./streethazards_test)" ]; then
-    tar -xf streethazards_test.tar -C ./streethazards_test
-else
-    echo "streethazards_test directory not empty"
-fi
-
-cd ..
-
-mkdir COCO2014
-cd COCO2014
-
-if ! [ -f ./val2014.zip ]; then
-    echo "Downloading COCO2014-val"
-    wget http://images.cocodataset.org/zips/val2014.zip
-fi
-mkdir val2014
-if ! [ "$(ls -A ./val2014)" ]; then
-    unzip val2014.zip -d ./val2014
-else
-    echo "val2014 directory not empty"
-fi
-
-if ! [ -f ./annotations_trainval2014.zip ]; then
-    echo "Downloading COCO2014-val"
-    wget http://images.cocodataset.org/annotations/annotations_trainval2014.zip
-fi
-mkdir annotations2014
-if ! [ "$(ls -A ./annotations2014)" ]; then
-    unzip annotations_trainval2014.zip -d ./annotations2014
-else
-    echo "annotations2014 directory not empty"
-fi
-
-cd ..
-
 mkdir SHIFT
 cd SHIFT
 mkdir discrete
