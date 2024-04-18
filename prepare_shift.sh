@@ -73,3 +73,15 @@ if ! [ "$(ls -A ./semseg)" ]; then
 else
     echo "semseg directory not empty"
 fi
+
+# # go to ./datasets/SHIFT/discrete/images/
+# cd ../../
+
+# # go to ./datasets/SHIFT/
+# cd ../../
+
+# # go to ./
+# cd ../../
+
+# cp data/shift_counts/counts_train.csv datasets/SHIFT/
+# cp data/shift_counts/counts_val.csv datasets/SHIFT/
