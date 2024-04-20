@@ -77,7 +77,7 @@ shift_label_mapping = {
 LabelFilter = namedtuple("LabelFilter", ["label_id", "min_amount", "max_amount"])
 
 no_pedestrian_filter = LabelFilter("4", -1, 0)
-pedestrian_filter_10_15k = LabelFilter("4", 10000, 15000)
+pedestrian_filter_10_15k = LabelFilter("4", 10000, 11000)
 
 class ShiftDataset(Dataset):
 

@@ -4,3 +4,4 @@ torchvision==0.17.2
 pandas==2.2.1
 pycocotools==2.0.7
 pytorch_histogram_matching==0.0.6
+scikit-learn==1.4.2

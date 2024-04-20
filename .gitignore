@@ -5,3 +5,7 @@ datasets/*
 
 test/*
 _*
+
+test_sh/*
+test_shift/*
+test_*

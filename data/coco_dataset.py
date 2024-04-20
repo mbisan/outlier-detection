@@ -49,6 +49,8 @@ class COCODataset(Dataset):
         img_path = os.path.join(self.img_dir, img["file_name"])
 
         rgb = read_image(img_path) # shape (3, w, h)
+        if rgb.shape[0] == 1:
+            rgb = torch.cat([rgb, rgb, rgb], dim=0)
 
         anns_id = self.coco.getAnnIds(imgIds=img["id"], catIds=self.cat_ids)
         anns = self.coco.loadAnns(anns_id)
