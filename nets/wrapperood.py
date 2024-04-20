@@ -32,6 +32,7 @@ class WrapperOod(LightningModule):
             beta: float = .0001,
             **kwargs: torch.Any) -> None:
         super().__init__(**kwargs)
+        self.save_hyperparameters()
 
         if backbone=="resnet50":
             self.model = deeplabv3plus_resnet50(num_classes=num_classes, pretrained_backbone=True)

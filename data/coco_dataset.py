@@ -54,22 +54,39 @@ class COCODataset(Dataset):
 
         anns_id = self.coco.getAnnIds(imgIds=img["id"], catIds=self.cat_ids)
         anns = self.coco.loadAnns(anns_id)
-        mask = self.coco.annToMask(random.choice(anns))
+        random.shuffle(anns)
 
-        nz = mask.nonzero()
-        min_x = nz[0].min()
-        max_x = nz[0].max()
-        min_y = nz[1].min()
-        max_y = nz[1].max()
+        for possible in anns:
+            mask = self.coco.annToMask(possible)
+
+            nz = mask.nonzero()
+            if nz[0].shape[0] == 0:
+                continue
+
+            min_x = nz[0].min()
+            max_x = nz[0].max()
+            min_y = nz[1].min()
+            max_y = nz[1].max()
+            height, width = (max_x - min_x), (max_y - min_y)
+
+            if height * width > 0:
+                break
+        else:
+            print("No possible object in image", rgb.shape)
+            # get random crop
+            min_x = random.randint(0, max(0, rgb.shape[1]-65))
+            min_y = random.randint(0, max(0, rgb.shape[2]-65))
+            max_x = min(min_x+64, rgb.shape[1])
+            max_y = min(min_y+64, rgb.shape[2])
+            height, width = (max_x - min_x), (max_y - min_y)
 
         rgb = rgb[:, min_x:max_x, min_y:max_y]
         mask = torch.from_numpy(mask[min_x:max_x, min_y:max_y])
 
         joint = torch.cat([rgb, mask.unsqueeze(0)], dim=0) # shape (4, w, h)
 
-        height, width = (max_x - min_x), (max_y - min_y)
         aspect_ratio = width / height
-        new_size = random.randint(int(self.max_size/4), self.max_size)
+        new_size = random.randint(int(self.max_size/4), self.max_size-1)
         if height > width:
             new_height = new_size
             new_width = int(new_height * aspect_ratio)
