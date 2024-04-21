@@ -69,6 +69,8 @@ class COCODataset(Dataset):
             max_y = nz[1].max()
             height, width = (max_x - min_x), (max_y - min_y)
 
+            if height < 16 or width < 16:
+                continue
             if height * width > 0:
                 break
         else:
