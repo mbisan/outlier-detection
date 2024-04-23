@@ -170,10 +170,5 @@ class WrapperOod(LightningModule):
         """ Configure the optimizers. """
         optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
         return {
-            "optimizer": optimizer,
-            "lr_scheduler": {
-                "interval": "epoch",
-                "monitor": "val_miou",
-                "frequency": 1
-            },
+            "optimizer": optimizer
         }
