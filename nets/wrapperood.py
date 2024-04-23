@@ -1,7 +1,6 @@
 import numpy as np
 import torch
 from torch import nn
-from torch.optim.lr_scheduler import ReduceLROnPlateau
 from pytorch_lightning import LightningModule
 import torchmetrics as tm
 from sklearn.metrics import roc_curve, average_precision_score, auc
@@ -173,8 +172,6 @@ class WrapperOod(LightningModule):
         return {
             "optimizer": optimizer,
             "lr_scheduler": {
-                "scheduler": ReduceLROnPlateau(optimizer, 
-                    mode="max", factor=np.sqrt(0.1), patience=2, min_lr=1e-10),
                 "interval": "epoch",
                 "monitor": "val_miou",
                 "frequency": 1
