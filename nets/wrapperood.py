@@ -168,7 +168,7 @@ class WrapperOod(LightningModule):
 
     def configure_optimizers(self):
         """ Configure the optimizers. """
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.lr)
+        optimizer = torch.optim.Adam(self.model.classifier.parameters(), lr=self.lr)
         return {
             "optimizer": optimizer
         }
