@@ -74,7 +74,7 @@ class COCODataset(Dataset):
             if height * width > 0:
                 break
         else:
-            print("No possible object in image", rgb.shape)
+            # print("No possible object in image", rgb.shape)
             # get random crop
             min_x = random.randint(0, max(0, rgb.shape[1]-65))
             min_y = random.randint(0, max(0, rgb.shape[2]-65))

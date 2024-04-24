@@ -39,7 +39,7 @@ def load_dataset(
     if dataset_name == "SHIFT":
         return ShiftOODDataModule(
             os.path.join(dataset_dir, "SHIFT"), 512,
-            os.path.join(dataset_dir, "COCO2014"), 320, 8,
+            os.path.join(dataset_dir, "COCO2014"), 352, 16,
             no_pedestrian_filter, pedestrian_filter_10_15k,
             "ood_pedestrian",
             horizon=horizon,
@@ -51,7 +51,7 @@ def load_dataset(
     elif dataset_name == "StreetHazards":
         return StreetHazardsOODDataModule(
             os.path.join(dataset_dir, "StreetHazards"), 512,
-            os.path.join(dataset_dir, "COCO2014"), 320, 8,
+            os.path.join(dataset_dir, "COCO2014"), 352, 16,
             "normal",
             horizon=horizon,
             alpha_blend=alpha_blend,
