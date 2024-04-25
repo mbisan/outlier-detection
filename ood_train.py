@@ -19,6 +19,7 @@ class Arguments:
     histogram: bool = False
     lr: float = .00001
     beta: float = .01
+    beta2: float = .001
 
 def get_argparse():
     parser = ArgumentParser()
@@ -62,7 +63,7 @@ def load_dataset(
 
     return None
 
-def load_pretrained(dataset_name, lr=.00001, beta=.01):
+def load_pretrained(dataset_name, lr=.00001, beta=.01, beta2=.001):
     # pylint: disable=no-value-for-parameter
     if dataset_name == "SHIFT":
         return WrapperOod.load_from_checkpoint(
@@ -70,7 +71,8 @@ def load_pretrained(dataset_name, lr=.00001, beta=.01):
             backbone = "resnet50",
             num_classes = 22,
             lr = lr,
-            beta = beta
+            beta = beta,
+            beta2 = beta2
         )
     elif dataset_name == "StreetHazards":
         return WrapperOod.load_from_checkpoint(
@@ -78,7 +80,8 @@ def load_pretrained(dataset_name, lr=.00001, beta=.01):
             backbone = "resnet50",
             num_classes = 14,
             lr = lr,
-            beta = beta
+            beta = beta,
+            beta2 = beta2
         )
     return None
 
@@ -86,7 +89,7 @@ def main(args: Arguments):
 
     dm = load_dataset(
         args.dataset, args.dataset_dir, args.horizon, args.alpha, args.histogram, args.blur)
-    model = load_pretrained(args.dataset, args.lr, args.beta)
+    model = load_pretrained(args.dataset, args.lr, args.beta, args.beta2)
 
     tr = Trainer(
         default_root_dir="./test_shift_ood", accelerator="cuda",

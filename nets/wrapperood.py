@@ -29,6 +29,7 @@ class WrapperOod(LightningModule):
             num_classes: int = 2,
             lr: float = .001,
             beta: float = .0001,
+            beta2: float = .0001/10,
             **kwargs: torch.Any) -> None:
         super().__init__(**kwargs)
         self.save_hyperparameters()
@@ -58,6 +59,7 @@ class WrapperOod(LightningModule):
 
         self.lr = lr
         self.beta = beta
+        self.beta2 = beta2
 
         self.ood_scores = []
         self.ood_masks = []
@@ -66,7 +68,7 @@ class WrapperOod(LightningModule):
         lse = torch.logsumexp(logits, dim=1) - logits.mean(dim=1).detach()
         loss_ood = lse[ood_mask].sum() / ood_mask.sum()
         loss_ind = lse[~ood_mask].sum() / (~ood_mask).sum()
-        ood_loss = self.beta * loss_ood - self.beta / 2 * loss_ind
+        ood_loss = self.beta * loss_ood - self.beta2 * loss_ind
 
         return ood_loss.float()
 

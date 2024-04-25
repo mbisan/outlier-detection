@@ -15,4 +15,4 @@ cd $HOME/outlier-detection
 source $HOME/.bashrc
 source activate dev2
 
-python3 ood_train.py --dataset SHIFT --histogram --blur 3 
+python3 ood_train.py --dataset SHIFT --blur 3 --beta 0.015 --beta2 0.0
