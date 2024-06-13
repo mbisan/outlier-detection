@@ -154,7 +154,7 @@ def expand_boundaries(boundaries, r=0):
     return expanded_boundaries
 
 
-class BoundarySuppressionWithSmoothing(nn.Module):
+class BoundarySuppressionWithSmoothing(nn.Module): # TODO
     """
     Apply boundary suppression and dilated smoothing
     """
@@ -601,7 +601,7 @@ class DeepV3Plus(nn.Module):
         elif self.score_mode == 'standardized_max_logit':
             if self.class_mean is None or self.class_var is None:
                 raise Exception("Class mean and var are not set!")
-            anomaly_score, prediction = main_out.detach().max(1)
+            anomaly_score, prediction = main_out.detach().max(1) # TODO
             for c in range(self.num_classes):
                 anomaly_score = torch.where(prediction == c,
                                             (anomaly_score - self.class_mean[c]) / np.sqrt(self.class_var[c]),
@@ -611,7 +611,7 @@ class DeepV3Plus(nn.Module):
 
         if self.enable_post_processing:
             with torch.no_grad():
-                anomaly_score = self.multi_scale(anomaly_score, prediction)
+                anomaly_score = self.multi_scale(anomaly_score, prediction) # TODO
 
         if self.training:
             loss1 = self.criterion(main_out, seg_gts)

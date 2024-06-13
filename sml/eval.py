@@ -202,7 +202,7 @@ if __name__ == '__main__':
 
             with torch.no_grad():
                 image = preprocess_image(image, mean_std)
-                main_out, anomaly_score = net(image)
+                main_out, anomaly_score = net(image) # TODO
             del main_out
 
             anomaly_score_list.append(anomaly_score.cpu().numpy())
