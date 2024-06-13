@@ -5,7 +5,9 @@ _old/*
 datasets/*
 
 test/*
-_*
+[-]*
+O-*
+E-*
 
 test_sh/*
 test_shift/*
