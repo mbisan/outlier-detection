@@ -1,12 +1,13 @@
+'''
+Script to pretrain on the SHIFT dataset for 50 epochs
+'''
+
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, TQDMProgressBar
 
 from utils.helper_functions import ShiftSegmentationDataModule
 from data.shift_dataset import LabelFilter
 from nets.wrapper import Wrapper
-
-# dm = StreetHazardsDataModule(
-#     "./datasets/StreetHazards", 512, 8, "normal", 8)
 
 dm = ShiftSegmentationDataModule(
     "./datasets/SHIFT", 512, 16, LabelFilter("4", -1, 0), LabelFilter("4", -1, 0), "ood_pedestrian", 8, .05)
