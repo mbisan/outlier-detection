@@ -38,6 +38,7 @@ class ShiftSegmentationDataModule(LightningDataModule):
             label_mapping=shift_label_mapping[label_mapping],
             label_filter=LabelFilter("0", 1e10, 1e11))
 
+        random.seed(42)
         random.shuffle(shift_train.files)
         train_num_images = int((1-val_amount)*len(shift_train.files))
         train_images = shift_train.files[:train_num_images]
