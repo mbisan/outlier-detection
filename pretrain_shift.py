@@ -12,7 +12,7 @@ from nets.wrapper import Wrapper
 dm = ShiftSegmentationDataModule(
     "./datasets/SHIFT", 512, 16, LabelFilter("4", -1, 0), LabelFilter("4", -1, 0), "ood_pedestrian", 8, .05)
 
-model = Wrapper("resnet50", 22, .0001)
+model = Wrapper("resnet50", 21, .0001)
 
 ckpt = ModelCheckpoint(
         monitor="val_miou",
