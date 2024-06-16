@@ -1,5 +1,5 @@
 '''
-Script to pretrain on the StreetHazards dataset for 50 epochs
+Script to pretrain on the StreetHazards dataset for 100 epochs
 '''
 
 from pytorch_lightning import Trainer
@@ -23,6 +23,6 @@ ckpt = ModelCheckpoint(
 
 tr = Trainer(default_root_dir="./test_sh", accelerator="cuda",
         callbacks=[ckpt, LearningRateMonitor(logging_interval="epoch"),
-        TQDMProgressBar(refresh_rate=1)], max_epochs=50)
+        TQDMProgressBar(refresh_rate=1)], max_epochs=100)
 
 tr.fit(model=model, datamodule=dm)

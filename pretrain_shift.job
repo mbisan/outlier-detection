@@ -15,4 +15,4 @@ cd $HOME/outlier-detection
 source $HOME/.bashrc
 source activate dev2
 
-python3 script.py
+python3 pretrain_shift.py
