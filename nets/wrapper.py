@@ -74,14 +74,14 @@ class Wrapper(LightningModule):
 
         out_proba = out.softmax(dim=1)
 
-        # logits, pred = out.max(dim=1)
+        logits, pred = out.max(dim=1)
 
         self.jaccard_index.update(out_proba, label)
         # self.auroc.update(out_proba, label)
         # self.average_precision.update(out_proba, label)
 
-        # self.max_logits.append(logits.detach().cpu().half().numpy())
-        # self.predictions.append(pred.detach().cpu().type(torch.uint8).numpy())
+        self.max_logits.append(logits.detach().cpu().numpy())
+        self.predictions.append(pred.detach().cpu().type(torch.uint8).numpy())
 
         return loss.float()
 
