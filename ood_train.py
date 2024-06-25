@@ -3,6 +3,8 @@ import json
 from dataclasses import dataclass
 from argparse import ArgumentParser
 
+import torch
+
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, TQDMProgressBar
 
@@ -70,11 +72,11 @@ def load_pretrained(dataset_name, lr=.00001, beta=.01, beta2=.001):
     # pylint: disable=no-value-for-parameter
     if dataset_name == "SHIFT":
         model = WrapperOod(backbone="resnet50", num_classes=21, lr=lr, beta=beta, beta2=beta2)
-        model.load_from_checkpoint(checkpoint_path="pretrained/shift_weights.ckpt")
+        model.load_state_dict(state_dict=torch.load("pretrained/shift_weights.ckpt"))
         return model
     elif dataset_name == "StreetHazards":
         model = WrapperOod(backbone="resnet50", num_classes=14, lr=lr, beta=beta, beta2=beta2)
-        model.load_from_checkpoint(checkpoint_path="pretrained/sh_weights.ckpt")
+        model.load_state_dict(state_dict=torch.load("pretrained/sh_weights.ckpt"))
         return model
     return None
 
