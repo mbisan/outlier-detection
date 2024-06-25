@@ -1,4 +1,5 @@
 import os
+import json
 from dataclasses import dataclass
 from argparse import ArgumentParser
 
@@ -94,6 +95,9 @@ def main(args: Arguments):
     tr.fit(model=model, datamodule=dm)
     out = tr.test(model=model, datamodule=dm)
     print(out)
+
+    with open(os.path.join(args.checkpoint, "result.json"), "w") as f:
+        json.dump({"results": out, "args": args.__dict__}, f)
 
 if __name__ == "__main__":
     p = get_argparse()
