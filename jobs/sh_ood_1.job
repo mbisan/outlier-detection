@@ -11,9 +11,9 @@
 #SBATCH --output=O-%x.%j.out
 #SBATCH --error=E-%x.%j.err
 
-cd $HOME/outlier-detection
+cd /scratch/mbikandi/outlier-detection
 
-source $HOME/.bashrc
+source /scratch/mbikandi/.bashrc
 source activate dev2
 
 python3 ood_train.py --dataset StreetHazards --alpha 0.9 --horizon 0.7 --blur 0 --beta 0.01 --beta2 0.001 --checkpoint ./test_shift/exp3 --epochs 5 --histogram
