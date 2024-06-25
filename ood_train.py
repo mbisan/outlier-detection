@@ -20,6 +20,8 @@ class Arguments:
     lr: float = .00001
     beta: float = .01
     beta2: float = .001
+    checkpoint: str = "./"
+    epochs: int = 5
 
 def get_argparse():
     parser = ArgumentParser()
@@ -66,23 +68,13 @@ def load_dataset(
 def load_pretrained(dataset_name, lr=.00001, beta=.01, beta2=.001):
     # pylint: disable=no-value-for-parameter
     if dataset_name == "SHIFT":
-        return WrapperOod.load_from_checkpoint(
-            checkpoint_path="test_shift/lightning_logs/version_0/checkpoints/epoch=49-step=68350-val_miou=0.8422.ckpt",
-            backbone = "resnet50",
-            num_classes = 22,
-            lr = lr,
-            beta = beta,
-            beta2 = beta2
-        )
+        model = WrapperOod(backbone="resnet50", num_classes=21, lr=lr, beta=beta, beta2=beta2)
+        model.load_from_checkpoint(checkpoint_path="pretrained/shift_weights.ckpt")
+        return model
     elif dataset_name == "StreetHazards":
-        return WrapperOod.load_from_checkpoint(
-            checkpoint_path="test_sh/lightning_logs/version_0/checkpoints/epoch=39-step=12800-val_miou=0.8175.ckpt",
-            backbone = "resnet50",
-            num_classes = 14,
-            lr = lr,
-            beta = beta,
-            beta2 = beta2
-        )
+        model = WrapperOod(backbone="resnet50", num_classes=14, lr=lr, beta=beta, beta2=beta2)
+        model.load_from_checkpoint(checkpoint_path="pretrained/sh_weights.ckpt")
+        return model
     return None
 
 def main(args: Arguments):
@@ -92,12 +84,12 @@ def main(args: Arguments):
     model = load_pretrained(args.dataset, args.lr, args.beta, args.beta2)
 
     tr = Trainer(
-        default_root_dir="./test_shift_ood", accelerator="cuda",
+        default_root_dir=args.checkpoint, accelerator="cuda",
         callbacks=[
             ModelCheckpoint(save_last=True, filename='{epoch}-{step}'),
             LearningRateMonitor(logging_interval="epoch"),
             TQDMProgressBar(refresh_rate=2)
-        ], max_epochs=5, check_val_every_n_epoch=10)
+        ], max_epochs=args.epochs, check_val_every_n_epoch=10)
 
     tr.fit(model=model, datamodule=dm)
     out = tr.test(model=model, datamodule=dm)

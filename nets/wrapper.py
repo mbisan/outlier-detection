@@ -44,6 +44,7 @@ class Wrapper(LightningModule):
 
         self.max_logits = []
         self.predictions = []
+        self.save_predictions = False
 
     def training_step(self, batch, _) -> torch.Tensor:
         # pylint: disable=arguments-differ
@@ -80,8 +81,9 @@ class Wrapper(LightningModule):
         # self.auroc.update(out_proba, label)
         # self.average_precision.update(out_proba, label)
 
-        self.max_logits.append(logits.detach().cpu().numpy())
-        self.predictions.append(pred.detach().cpu().type(torch.uint8).numpy())
+        if self.save_predictions:
+            self.max_logits.append(logits.detach().cpu().numpy())
+            self.predictions.append(pred.detach().cpu().type(torch.uint8).numpy())
 
         return loss.float()
 

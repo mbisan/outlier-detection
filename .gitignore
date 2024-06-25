@@ -1,5 +1,5 @@
 *__pycache__*
-.venv/*
+.env/*
 
 _old/*
 datasets/*
@@ -8,6 +8,7 @@ test/*
 [-]*
 O-*
 E-*
+*.ckpt
 
 test_sh/*
 test_shift/*
