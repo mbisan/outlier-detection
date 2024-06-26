@@ -16,6 +16,5 @@ cd /scratch/mbikandi/outlier-detection
 source /scratch/mbikandi/.bashrc
 source activate dev2
 
-python3 ood_train.py --dataset StreetHazards --alpha 0.9 --horizon 0.3 --blur 3 --beta 0.01 --beta2 0.001 --checkpoint ./test_shift/exp0 --epochs 5 --histogram
-python3 ood_train.py --dataset StreetHazards --alpha 1 --horizon 0.3 --blur 3 --beta 0.01 --beta2 0.001 --checkpoint ./test_shift/exp1 --epochs 5 --histogram
-python3 ood_train.py --dataset StreetHazards --alpha 0.9 --horizon 0 --blur 3 --beta 0.01 --beta2 0.001 --checkpoint ./test_shift/exp2 --epochs 5 --histogram
+python3 ood_train.py --dataset StreetHazards --alpha 1 --horizon 0 --blur 3 --beta 0.01 --beta2 0.001 --checkpoint ./test_sh/exp0 --epochs 5 --histogram
+python3 ood_train.py --dataset StreetHazards --alpha 1 --horizon 0 --blur 3 --beta 0.01 --beta2 0.0 --checkpoint ./test_sh/exp1 --epochs 5 --histogram
