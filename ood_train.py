@@ -92,7 +92,7 @@ def main(args: Arguments):
             ModelCheckpoint(save_last=True, filename='{epoch}-{step}'),
             LearningRateMonitor(logging_interval="epoch"),
             TQDMProgressBar(refresh_rate=2)
-        ], max_epochs=args.epochs, check_val_every_n_epoch=10)
+        ], max_epochs=args.epochs, check_val_every_n_epoch=100)
 
     tr.fit(model=model, datamodule=dm)
     out = tr.test(model=model, datamodule=dm)
