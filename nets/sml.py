@@ -85,8 +85,8 @@ class SMLWithPostProcessing(nn.Module):
         assert means.shape[0] == std.shape[0]
         self.num_classes = means.shape[0]
 
-        self.means = means
-        self.std = std
+        self.means = means.type(torch.float32)
+        self.std = std.type(torch.float32)
 
         self.boundary_suppression = boundary_suppression
         self.boundary_width = boundary_width
@@ -99,7 +99,10 @@ class SMLWithPostProcessing(nn.Module):
         self.boundary_per_iteration = [self.boundary_width - diff * i - 1 for i in range(self.boundary_iteration-1)] + [0]
 
         self.register_buffer("gaussian_kernel",
-            torch.from_numpy(get_2d_gaussian_kernel(self.kernel_size, 1.0)).unsqueeze(0).unsqueeze(0))
+            torch.from_numpy(get_2d_gaussian_kernel(self.kernel_size, 1.0)).type(torch.float32).unsqueeze(0).unsqueeze(0))
+        
+        self.replication_pad_1 = nn.ReplicationPad2d(1)
+        self.replication_pad_dilation = nn.ReplicationPad2d(3*self.dilation)
 
         if base == "max_logits":
             self.base_ood_scores = max_logits
@@ -111,7 +114,7 @@ class SMLWithPostProcessing(nn.Module):
         x: logits of shape (n, c, w, h)
         '''
 
-        ood_scores = self.base_ood_scores(x)
+        ood_scores = self.base_ood_scores(x).unsqueeze(1)
         _, pred = x.max(1, keepdims=True) # both of shape (n, 1, w, d)
 
         sml = (ood_scores - self.means[pred]) / self.std[pred] # shape (n, 1, w, d)
@@ -119,21 +122,23 @@ class SMLWithPostProcessing(nn.Module):
         if self.boundary_suppression:
             boundaries = find_boundaries(pred)
 
-            for boundary_width in range(self.boundary_per_iteration):
+            for boundary_width in self.boundary_per_iteration:
                 # expand boundaries, find what sml values are not inside boundaries
                 # update the sml values by dividing the number of values inside boundaries
                 expanded_boundaries = expand_boundaries(boundaries, r=boundary_width)
                 non_boundary_mask = 1. * (expanded_boundaries == 0)
                 sml_masked = sml * non_boundary_mask
 
-                sml_non_boundary = F.conv2d(sml_masked, FULL_3X3_KERNEL, padding="same")
-                non_boundary_count = F.conv2d(non_boundary_mask, FULL_3X3_KERNEL, padding="same").long()
+                sml_non_boundary = F.conv2d(
+                    self.replication_pad_1(sml_masked), FULL_3X3_KERNEL.unsqueeze(0).unsqueeze(0), padding="valid")
+                non_boundary_count = F.conv2d(
+                    self.replication_pad_1(non_boundary_mask), FULL_3X3_KERNEL.unsqueeze(0).unsqueeze(0), padding="valid").long()
 
                 sml_avg = torch.where(non_boundary_count == 0, sml, sml_non_boundary/non_boundary_count)
 
                 sml = torch.where(non_boundary_mask == 0, sml_avg, sml) # inside boundaries the new value is put
 
         if self.dilated_smoothing:
-            sml = F.conv2d(sml_masked, self.gaussian_kernel, padding="same")
+            sml = F.conv2d(self.replication_pad_dilation(sml_masked), self.gaussian_kernel, padding="valid", dilation=self.dilation)
 
         return sml

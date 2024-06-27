@@ -8,11 +8,11 @@ import numpy as np
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import TQDMProgressBar
 
-from utils.helper_functions import load_dataset, ShiftSegmentationDataModule, StreetHazardsDataModule
+from utils.helper_functions import ShiftOODDataModule, StreetHazardsOODDataModule
 from utils.arguments import get_parser
 from nets.wrapperood import WrapperOod
 from nets.sml import max_logits, unnormalized_likelihood, SMLWithPostProcessing
-from data.shift_dataset import LabelFilter
+from data.shift_dataset import no_pedestrian_filter, pedestrian_filter_10_15k
 
 @dataclass
 class Arguments:
@@ -38,26 +38,32 @@ def load_model(checkpoint_dir):
     return model, num_classes
 
 def main(args: Arguments):
-    if args.finetuned:
-        dm = load_dataset(
-            args.dataset, args.dataset_dir, 0, 1, False, 0)
-    else:
-        if args.dataset == "SHIFT":
-            dm = ShiftSegmentationDataModule(
-                "./datasets/SHIFT", 512, 16, LabelFilter("4", -1, 0), LabelFilter("4", -1, 0), "ood_pedestrian", 8, .05)
-        elif args.dataset == "StreetHazards":
-            dm = StreetHazardsDataModule(
-                "./datasets/StreetHazards", 512, 16, "normal", 8)
+    if args.dataset == "SHIFT":
+        dm = ShiftOODDataModule(
+            os.path.join(args.dataset_dir, "SHIFT"), 512,
+            os.path.join(args.dataset_dir, "COCO2014"), 352, 2,
+            no_pedestrian_filter, pedestrian_filter_10_15k,
+            "ood_pedestrian",
+            num_workers=8, val_amount=.05
+        )
+    elif args.dataset == "StreetHazards":
+        dm = StreetHazardsOODDataModule(
+            os.path.join(args.dataset_dir, "StreetHazards"), 512,
+            os.path.join(args.dataset_dir, "COCO2014"), 352, 2,
+            "normal",
+            num_workers=8
+        )
+    dm.shift_test.files = dm.shift_test.files[:5]
 
-    model = load_model(args.checkpoint)
+    model, num_classes = load_model(args.checkpoint_dir)
 
     if args.ood_scores == "max_logits":
         model.compute_ood_scores = max_logits
     elif args.ood_scores == "unnormalized_likelihood":
         model.compute_ood_scores = unnormalized_likelihood
     elif args.ood_scores == "sml_ml":
-        means = np.load(args.checkpoint_dir.replace(".ckpt", "max_logits.means"))
-        variances = np.load(args.checkpoint_dir.replace(".ckpt", "max_logits.var"))
+        means = torch.from_numpy(np.load(args.checkpoint_dir.replace(".ckpt", "max_logits.means")))
+        variances = torch.from_numpy(np.load(args.checkpoint_dir.replace(".ckpt", "max_logits.var")))
         model.compute_ood_scores = SMLWithPostProcessing(
             means, np.sqrt(variances), "max_logits",
             args.boundary_suppression, args.boundary_width, args.boundary_iteration,
@@ -71,14 +77,11 @@ def main(args: Arguments):
             args.dilated_smoothing, args.kernel_size, args.dilation)
 
     tr = Trainer(
-        default_root_dir=args.checkpoint, accelerator="cuda",
+        default_root_dir=os.path.dirname(args.checkpoint_dir), accelerator="auto",
         callbacks=[TQDMProgressBar(refresh_rate=2)])
 
     out = tr.test(model=model, datamodule=dm)
     print(out)
-
-    with open(os.path.join(os.path.dirname(args.checkpoint_dir), "result.json"), "w") as f:
-        json.dump({"results": out, "args": args.__dict__}, f)
 
 if __name__ == "__main__":
     p = get_parser(Arguments)
