@@ -9,6 +9,7 @@ from nets.vainfDLV3p.modeling import (
     deeplabv3plus_resnet50, deeplabv3plus_resnet101, deeplabv3plus_hrnetv2_32,
     deeplabv3plus_mobilenet, deeplabv3plus_resnet34
 )
+from nets.sml import unnormalized_likelihood, max_logits
 
 class Wrapper(LightningModule):
 
@@ -17,6 +18,7 @@ class Wrapper(LightningModule):
             backbone: str = "resnet50",
             num_classes: int = 2,
             lr: float = .001,
+            ood_scores = "max_logits",
             **kwargs: torch.Any) -> None:
         super().__init__(**kwargs)
 
@@ -42,9 +44,14 @@ class Wrapper(LightningModule):
 
         self.lr = lr
 
-        self.max_logits = []
+        self.ood_scores = []
         self.predictions = []
         self.save_predictions = False
+
+        if ood_scores == "max_logits":
+            self.compute_ood_scores = max_logits
+        elif ood_scores == "unnormalized_likelihood":
+            self.compute_ood_scores = unnormalized_likelihood
 
     def training_step(self, batch, _) -> torch.Tensor:
         # pylint: disable=arguments-differ
@@ -75,14 +82,15 @@ class Wrapper(LightningModule):
 
         out_proba = out.softmax(dim=1)
 
-        logits, pred = out.max(dim=1)
+        _, pred = out.max(dim=1)
+        ood_scores = self.compute_ood_scores(out)
 
         self.jaccard_index.update(out_proba, label)
         # self.auroc.update(out_proba, label)
         # self.average_precision.update(out_proba, label)
 
         if self.save_predictions:
-            self.max_logits.append(logits.detach().cpu().numpy())
+            self.ood_scores.append(ood_scores.detach().cpu().numpy())
             self.predictions.append(pred.detach().cpu().type(torch.uint8).numpy())
 
         return loss.float()

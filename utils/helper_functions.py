@@ -1,9 +1,11 @@
 import random
+import os
 
 from torch.utils.data import DataLoader
 from pytorch_lightning import LightningDataModule
 
-from data.shift_dataset import ShiftDataset, LabelFilter, shift_label_mapping
+from data.shift_dataset import (
+    ShiftDataset, LabelFilter, shift_label_mapping, pedestrian_filter_10_15k, no_pedestrian_filter)
 from data.streethazards_dataset import StreetHazardsDataset, streethazards_label_mapping
 from data.coco_dataset import COCODataset, USED_CATEGORIES
 from data.dataset_handler import RandomCropFlipDataset, OutlierDataset
@@ -255,3 +257,32 @@ class StreetHazardsOODDataModule(LightningDataModule):
         return DataLoader(
             self.streethazards_test, self.batch_size,
             shuffle=False, num_workers=self.num_workers)
+
+def load_dataset(
+        dataset_name, dataset_dir="./datasets",
+        horizon=0, alpha_blend=1, histogram_matching=False, blur=0):
+    if dataset_name == "SHIFT":
+        return ShiftOODDataModule(
+            os.path.join(dataset_dir, "SHIFT"), 512,
+            os.path.join(dataset_dir, "COCO2014"), 352, 16,
+            no_pedestrian_filter, pedestrian_filter_10_15k,
+            "ood_pedestrian",
+            horizon=horizon,
+            alpha_blend=alpha_blend,
+            histogram_matching=histogram_matching,
+            blur=blur,
+            num_workers=8, val_amount=.05
+        )
+    elif dataset_name == "StreetHazards":
+        return StreetHazardsOODDataModule(
+            os.path.join(dataset_dir, "StreetHazards"), 512,
+            os.path.join(dataset_dir, "COCO2014"), 352, 16,
+            "normal",
+            horizon=horizon,
+            alpha_blend=alpha_blend,
+            histogram_matching=histogram_matching,
+            blur=blur,
+            num_workers=8
+        )
+
+    return None

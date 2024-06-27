@@ -13,3 +13,5 @@ E-*
 test_sh/*
 test_shift/*
 test_*
+
+*lightning_logs*

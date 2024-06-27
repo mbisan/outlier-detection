@@ -12,7 +12,9 @@ To prepare the datasets, [SHIFT](https://www.vis.xyz/shift/), [StreetHazards](ht
 
 ---
 
-To pretrain the segmentation models use the `pretrain_shift.py` and `pretrain_sh.py` scripts. The pretrained models (weights only) are available in [this link](https://drive.google.com/file/d/1mVTMDGcwyK3w9FSCDqB-aBWCD_beYDUC/view?usp=drive_link), and should be placed on the `pretrained` folder. The Outlier Injection training is done with the `ood_train.py` script, with the following command:
+To pretrain the segmentation models use the `pretrain_shift.py` and `pretrain_sh.py` scripts. The pretrained models (weights only) are available in [this link](https://drive.google.com/file/d/1mVTMDGcwyK3w9FSCDqB-aBWCD_beYDUC/view?usp=drive_link), and should be placed on the `pretrained` folder. These models are trained to 83%  mIoU on StreetHazards and 85% (val mIoU) and X% test mIoU (on images without the pedestrian class) on SHIFT.
+
+The Outlier Injection training is done with the `ood_train.py` script, with the following command:
 
 ```
 python3 ood_train --dataset DATASET_NAME --checkpoint SAVE_PATH --epochs NUM_EPOCHS \

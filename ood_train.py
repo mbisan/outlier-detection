@@ -1,15 +1,14 @@
 import os
 import json
 from dataclasses import dataclass
-from argparse import ArgumentParser
 
 import torch
 
 from pytorch_lightning import Trainer
 from pytorch_lightning.callbacks import ModelCheckpoint, LearningRateMonitor, TQDMProgressBar
 
-from utils.helper_functions import ShiftOODDataModule, StreetHazardsOODDataModule
-from data.shift_dataset import pedestrian_filter_10_15k, no_pedestrian_filter
+from utils.helper_functions import load_dataset
+from utils.arguments import get_parser
 from nets.wrapperood import WrapperOod
 
 @dataclass
@@ -25,48 +24,6 @@ class Arguments:
     beta2: float = .001
     checkpoint: str = "./"
     epochs: int = 5
-
-def get_argparse():
-    parser = ArgumentParser()
-
-    for argument, typehint in Arguments.__annotations__.items():
-        if typehint == bool:
-            parser.add_argument(f"--{argument}",
-                action="store_false" if Arguments.__dict__[argument] else "store_true")
-        else:
-            parser.add_argument(f"--{argument}",
-                type=typehint, default=Arguments.__dict__[argument])
-
-    return parser
-
-def load_dataset(
-        dataset_name, dataset_dir="./datasets",
-        horizon=0, alpha_blend=1, histogram_matching=False, blur=0):
-    if dataset_name == "SHIFT":
-        return ShiftOODDataModule(
-            os.path.join(dataset_dir, "SHIFT"), 512,
-            os.path.join(dataset_dir, "COCO2014"), 352, 16,
-            no_pedestrian_filter, pedestrian_filter_10_15k,
-            "ood_pedestrian",
-            horizon=horizon,
-            alpha_blend=alpha_blend,
-            histogram_matching=histogram_matching,
-            blur=blur,
-            num_workers=8, val_amount=.05
-        )
-    elif dataset_name == "StreetHazards":
-        return StreetHazardsOODDataModule(
-            os.path.join(dataset_dir, "StreetHazards"), 512,
-            os.path.join(dataset_dir, "COCO2014"), 352, 16,
-            "normal",
-            horizon=horizon,
-            alpha_blend=alpha_blend,
-            histogram_matching=histogram_matching,
-            blur=blur,
-            num_workers=8
-        )
-
-    return None
 
 def load_pretrained(dataset_name, lr=.00001, beta=.01, beta2=.001):
     # pylint: disable=no-value-for-parameter
@@ -102,7 +59,7 @@ def main(args: Arguments):
         json.dump({"results": out, "args": args.__dict__}, f)
 
 if __name__ == "__main__":
-    p = get_argparse()
+    p = get_parser(Arguments)
     arg = p.parse_args()
 
     print(arg)

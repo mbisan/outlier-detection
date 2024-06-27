@@ -6,8 +6,10 @@ import torch.nn.functional as F
 from kornia import morphology as km
 import cv2
 
-FULL_3X3_KERNEL = torch.ones((3, 3), dtype=torch.float32).cuda()
-CROSS_3X3_KERNEL = torch.tensor([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=torch.float32).cuda()
+device = "cuda" if torch.cuda.is_available() else "cpu"
+
+FULL_3X3_KERNEL = torch.ones((3, 3), dtype=torch.float32, device=device)
+CROSS_3X3_KERNEL = torch.tensor([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=torch.float32, device=device)
 
 def get_dilation_kernel(kernel: torch.Tensor, k):
     if kernel.sum()==0:
@@ -19,7 +21,7 @@ def get_dilation_kernel(kernel: torch.Tensor, k):
     return get_dilation_kernel(km.dilation(kernel, CROSS_3X3_KERNEL), k-1)
 
 DILATION_KERNEL = [
-    get_dilation_kernel(torch.zeros((1, 1, 2 * i + 1, 2 * i + 1)).cuda(), i).cuda() for i in range(10)
+    get_dilation_kernel(torch.zeros((1, 1, 2 * i + 1, 2 * i + 1), device=device), i) for i in range(10)
 ]
 
 def get_2d_gaussian_kernel(n, std, normalised=False) -> np.ndarray:
@@ -52,6 +54,11 @@ def expand_boundaries(boundaries, r=0):
 
     return expanded_boundaries
 
+def max_logits(logits: torch.Tensor) -> torch.Tensor:
+    return -logits.max(dim=1)[0]
+
+def unnormalized_likelihood(logits: torch.Tensor) -> torch.Tensor:
+    return -logits.sum(dim=1)[0]
 
 class SMLWithPostProcessing(nn.Module):
 
