@@ -9,6 +9,7 @@ from nets.vainfDLV3p.modeling import (
     deeplabv3plus_resnet50, deeplabv3plus_resnet101, deeplabv3plus_hrnetv2_32,
     deeplabv3plus_mobilenet, deeplabv3plus_resnet34
 )
+from nets.sml import max_logits
 
 def calculate_auroc(gt, conf):
     fpr, tpr, threshold = roc_curve(gt, conf)
@@ -64,6 +65,8 @@ class WrapperOod(LightningModule):
         self.ood_scores = []
         self.ood_masks = []
 
+        self.compute_ood_scores = max_logits
+
     def ood_loss(self, logits: torch.Tensor, ood_mask: torch.Tensor):
         lse = torch.logsumexp(logits, dim=1) - logits.mean(dim=1).detach()
         loss_ood = lse[ood_mask].sum() / ood_mask.sum()
@@ -71,9 +74,6 @@ class WrapperOod(LightningModule):
         ood_loss = self.beta * loss_ood - self.beta2 * loss_ind
 
         return ood_loss.float()
-
-    def compute_ood_scores(self, logits: torch.Tensor):
-        return -logits.max(dim=1)[0]
 
     def training_step(self, batch, _) -> torch.Tensor:
         # pylint: disable=arguments-differ
@@ -122,13 +122,11 @@ class WrapperOod(LightningModule):
         # get concatenated outputs
         print(self.ood_scores[0].shape)
 
-        all_ood_scores = np.concatenate([x.reshape(-1) for x in self.ood_scores])
-        self.ood_scores = []
-        all_ood_masks = np.concatenate([x.reshape(-1) for x in self.ood_masks])
-        self.ood_masks = []
+        self.ood_scores = np.concatenate([x.reshape(-1) for x in self.ood_scores])
+        self.ood_masks = np.concatenate([x.reshape(-1) for x in self.ood_masks])
 
-        auroc, fpr95, _ = calculate_auroc(all_ood_masks, all_ood_scores)
-        ap = average_precision_score(all_ood_masks, all_ood_scores)
+        auroc, fpr95, _ = calculate_auroc(self.ood_masks, self.ood_scores)
+        ap = average_precision_score(self.ood_masks, self.ood_scores)
 
         self.log(
             "val_auroc", auroc, on_epoch=True,

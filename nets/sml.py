@@ -58,7 +58,7 @@ def max_logits(logits: torch.Tensor) -> torch.Tensor:
     return -logits.max(dim=1)[0]
 
 def unnormalized_likelihood(logits: torch.Tensor) -> torch.Tensor:
-    return -logits.sum(dim=1)[0]
+    return -logits.sum(dim=1)
 
 class SMLWithPostProcessing(nn.Module):
 
@@ -66,6 +66,7 @@ class SMLWithPostProcessing(nn.Module):
             self,
             means: torch.Tensor,
             std: torch.Tensor,
+            base: str = "max_logits",
             boundary_suppression=True,
             boundary_width=4,
             boundary_iteration=4,
@@ -100,14 +101,20 @@ class SMLWithPostProcessing(nn.Module):
         self.register_buffer("gaussian_kernel",
             torch.from_numpy(get_2d_gaussian_kernel(self.kernel_size, 1.0)).unsqueeze(0).unsqueeze(0))
 
+        if base == "max_logits":
+            self.base_ood_scores = max_logits
+        elif base == "unnormalized_likelihood":
+            self.base_ood_scores = unnormalized_likelihood
+
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         '''
         x: logits of shape (n, c, w, h)
         '''
 
-        max_logits, pred = x.max(1, keepdims=True) # both of shape (n, 1, w, d)
+        ood_scores = self.base_ood_scores(x)
+        _, pred = x.max(1, keepdims=True) # both of shape (n, 1, w, d)
 
-        sml = (max_logits - self.means[pred]) / self.std[pred] # shape (n, 1, w, d)
+        sml = (ood_scores - self.means[pred]) / self.std[pred] # shape (n, 1, w, d)
 
         if self.boundary_suppression:
             boundaries = find_boundaries(pred)
@@ -129,4 +136,4 @@ class SMLWithPostProcessing(nn.Module):
         if self.dilated_smoothing:
             sml = F.conv2d(sml_masked, self.gaussian_kernel, padding="same")
 
-        return sml, pred
+        return sml

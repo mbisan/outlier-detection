@@ -5,3 +5,5 @@ pandas==2.2.1
 pycocotools==2.0.7
 pytorch_histogram_matching==0.0.6
 scikit-learn==1.4.2
+kornia==0.7.2
+opencv-python==4.10.0.84
