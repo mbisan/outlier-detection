@@ -117,7 +117,7 @@ class SMLWithPostProcessing(nn.Module):
         ood_scores = self.base_ood_scores(x).unsqueeze(1)
         _, pred = x.max(1, keepdims=True) # both of shape (n, 1, w, d)
 
-        sml = (ood_scores - self.means[pred]) / self.std[pred] # shape (n, 1, w, d)
+        sml = (-ood_scores + self.means[pred]) / self.std[pred] # shape (n, 1, w, d)
 
         if self.boundary_suppression:
             boundaries = find_boundaries(pred)
@@ -141,4 +141,4 @@ class SMLWithPostProcessing(nn.Module):
         if self.dilated_smoothing:
             sml = F.conv2d(self.replication_pad_dilation(sml_masked), self.gaussian_kernel, padding="valid", dilation=self.dilation)
 
-        return sml
+        return -sml

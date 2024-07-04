@@ -46,6 +46,7 @@ def main(args: Arguments):
             "ood_pedestrian",
             num_workers=8, val_amount=.05
         )
+        dm.shift_test.files = dm.shift_test.files[:3]
     elif args.dataset == "StreetHazards":
         dm = StreetHazardsOODDataModule(
             os.path.join(args.dataset_dir, "StreetHazards"), 512,

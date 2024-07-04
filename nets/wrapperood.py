@@ -67,6 +67,11 @@ class WrapperOod(LightningModule):
 
         self.compute_ood_scores = max_logits
 
+    def forward(self, x):
+        out: torch.Tensor = self.model(x.float()/255.0) # logits
+        scores = self.compute_ood_scores(out)
+        return out, scores 
+
     def ood_loss(self, logits: torch.Tensor, ood_mask: torch.Tensor):
         lse = torch.logsumexp(logits, dim=1) - logits.mean(dim=1).detach()
         loss_ood = lse[ood_mask].sum() / ood_mask.sum()
