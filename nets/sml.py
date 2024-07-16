@@ -85,8 +85,8 @@ class SMLWithPostProcessing(nn.Module):
         assert means.shape[0] == std.shape[0]
         self.num_classes = means.shape[0]
 
-        self.means = means.type(torch.float32)
-        self.std = std.type(torch.float32)
+        self.register_buffer("means", means.type(torch.float32))
+        self.register_buffer("std", std.type(torch.float32))
 
         self.boundary_suppression = boundary_suppression
         self.boundary_width = boundary_width
@@ -114,10 +114,10 @@ class SMLWithPostProcessing(nn.Module):
         x: logits of shape (n, c, w, h)
         '''
 
-        ood_scores = self.base_ood_scores(x).unsqueeze(1)
+        ood_scores = -self.base_ood_scores(x).unsqueeze(1)
         _, pred = x.max(1, keepdims=True) # both of shape (n, 1, w, d)
 
-        sml = (-ood_scores + self.means[pred]) / self.std[pred] # shape (n, 1, w, d)
+        sml = (ood_scores - self.means[pred]) / self.std[pred] # shape (n, 1, w, d)
 
         if self.boundary_suppression:
             boundaries = find_boundaries(pred)
