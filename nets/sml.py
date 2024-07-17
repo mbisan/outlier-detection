@@ -58,7 +58,7 @@ def max_logits(logits: torch.Tensor) -> torch.Tensor:
     return -logits.max(dim=1)[0]
 
 def unnormalized_likelihood(logits: torch.Tensor) -> torch.Tensor:
-    return -logits.sum(dim=1)
+    return -logits.logsumexp(dim=1)
 
 class SMLWithPostProcessing(nn.Module):
 
