@@ -46,7 +46,7 @@ def main(args: Arguments):
     tr = Trainer(
         default_root_dir=args.checkpoint, accelerator="cuda",
         callbacks=[
-            ModelCheckpoint(),
+            ModelCheckpoint(save_on_train_epoch_end=True),
             TQDMProgressBar(refresh_rate=2)
         ], max_epochs=args.epochs, check_val_every_n_epoch=100)
 
