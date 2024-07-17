@@ -123,7 +123,7 @@ class WrapperOod(LightningModule):
 
         return loss.float()
 
-    def log_metrics(self):
+    def log_metrics(self, stage):
         # get concatenated outputs
         print(self.ood_scores[0].shape)
 
@@ -134,13 +134,13 @@ class WrapperOod(LightningModule):
         ap = average_precision_score(self.ood_masks, self.ood_scores)
 
         self.log(
-            "val_auroc", auroc, on_epoch=True,
+            f"{stage}_auroc", auroc, on_epoch=True,
             on_step=False, prog_bar=True, logger=True)
         self.log(
-            "val_fpr95", fpr95, on_epoch=True,
+            f"{stage}_fpr95", fpr95, on_epoch=True,
             on_step=False, prog_bar=True, logger=True)
         self.log(
-            "val_ap", ap, on_epoch=True,
+            f"{stage}_ap", ap, on_epoch=True,
             on_step=False, prog_bar=True, logger=True)
 
     def validation_step(self, batch, _) -> torch.Tensor:
