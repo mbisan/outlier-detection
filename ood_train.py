@@ -52,6 +52,10 @@ def main(args: Arguments):
         ], max_epochs=args.epochs, check_val_every_n_epoch=100)
 
     tr.fit(model=model, datamodule=dm)
+
+    model.ood_scores = []
+    model.ood_masks = []
+
     out = tr.test(model=model, datamodule=dm)
     print(out)
 
