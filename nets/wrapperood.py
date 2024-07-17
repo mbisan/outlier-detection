@@ -164,11 +164,11 @@ class WrapperOod(LightningModule):
         return loss
 
     def on_validation_epoch_end(self) -> None:
-        self.log_metrics()
+        self.log_metrics("val")
         return super().on_validation_epoch_end()
 
     def on_test_epoch_end(self) -> None:
-        self.log_metrics()
+        self.log_metrics("test")
         return super().on_test_epoch_end()
 
     def configure_optimizers(self):
