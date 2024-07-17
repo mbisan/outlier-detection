@@ -68,8 +68,8 @@ def main(args: Arguments):
             args.boundary_suppression, args.boundary_width, args.boundary_iteration,
             args.dilated_smoothing, args.kernel_size, args.dilation)
     elif args.ood_scores == "sml_ul":
-        means = np.load(args.checkpoint_dir.replace(".ckpt", "unnormalized_likelihood.means"))
-        variances = np.load(args.checkpoint_dir.replace(".ckpt", "unnormalized_likelihood.var"))
+        means = torch.from_numpy(np.load(args.checkpoint_dir.replace(".ckpt", "unnormalized_likelihood.means")))
+        variances = torch.from_numpy(np.load(args.checkpoint_dir.replace(".ckpt", "unnormalized_likelihood.var")))
         model.compute_ood_scores = SMLWithPostProcessing(
             means, np.sqrt(variances), "unnormalized_likelihood",
             args.boundary_suppression, args.boundary_width, args.boundary_iteration,

@@ -1,0 +1,33 @@
+#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64GB
+#SBATCH --gres=gpu:1
+#SBATCH --constraint=rtx3090
+#SBATCH --time=1-00:00:00
+#SBATCH --job-name=metrics_sh
+#SBATCH --output=O-%x.%j.out
+#SBATCH --error=E-%x.%j.err
+
+cd /scratch/mbikandi/outlier-detection
+
+source /scratch/mbikandi/.bashrc
+source activate dev2
+
+python3 compute_means_and_variances.py --dataset StreetHazards --checkpoint ./pretrained/sh_weights.ckpt --ood_scores max_logits
+python3 compute_means_and_variances.py --dataset StreetHazards --checkpoint ./pretrained/sh_weights.ckpt --ood_scores unnormalized_likelihood
+
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores max_logits
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores unnormalized_likelihood
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores sml_ml
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores sml_ul
+
+python3 compute_means_and_variances.py --dataset StreetHazards --checkpoint ./test_sh_good/sh_ood.ckpt --ood_scores max_logits
+python3 compute_means_and_variances.py --dataset StreetHazards --checkpoint ./test_sh_good/sh_ood.ckpt --ood_scores unnormalized_likelihood
+
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores max_logits
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores unnormalized_likelihood
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores sml_ml
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores sml_ul
