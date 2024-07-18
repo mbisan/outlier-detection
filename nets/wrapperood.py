@@ -70,7 +70,7 @@ class WrapperOod(LightningModule):
     def forward(self, x):
         out: torch.Tensor = self.model(x.float()/255.0) # logits
         scores = self.compute_ood_scores(out)
-        return out, scores 
+        return out, scores
 
     def ood_loss(self, logits: torch.Tensor, ood_mask: torch.Tensor):
         lse = torch.logsumexp(logits, dim=1) - logits.mean(dim=1).detach()
@@ -92,8 +92,6 @@ class WrapperOod(LightningModule):
 
         ood_loss = self.ood_loss(out, ood_mask)
 
-        out_proba = out.softmax(dim=1)
-        self.jaccard_index.update(out_proba, label)
         self.log(
             "train_loss", seg_loss, on_epoch=True,
             on_step=True, prog_bar=True, logger=True)
@@ -125,7 +123,7 @@ class WrapperOod(LightningModule):
 
     def log_metrics(self, stage):
         # get concatenated outputs
-        print(self.ood_scores[0].shape)
+        print(self.ood_scores[0].shape, len(self.ood_scores))
 
         self.ood_scores = np.concatenate([x.reshape(-1) for x in self.ood_scores])
         self.ood_masks = np.concatenate([x.reshape(-1) for x in self.ood_masks])
@@ -135,6 +133,9 @@ class WrapperOod(LightningModule):
 
         self.log(
             f"{stage}_auroc", auroc, on_epoch=True,
+            on_step=False, prog_bar=True, logger=True)
+        self.log(
+            f"{stage}_iou", self.jaccard_index.compute(), on_epoch=True,
             on_step=False, prog_bar=True, logger=True)
         self.log(
             f"{stage}_fpr95", fpr95, on_epoch=True,
@@ -147,19 +148,11 @@ class WrapperOod(LightningModule):
         # pylint: disable=arguments-differ
         loss = self.validation_test_step(batch)
 
-        self.log(
-            "val_miou", self.jaccard_index, on_epoch=True,
-            on_step=False, prog_bar=True, logger=True)
-
         return loss
 
     def test_step(self, batch, _) -> torch.Tensor:
         # pylint: disable=arguments-differ
         loss = self.validation_test_step(batch)
-
-        self.log(
-            "test_miou", self.jaccard_index, on_epoch=True,
-            on_step=False, prog_bar=True, logger=True)
 
         return loss
 

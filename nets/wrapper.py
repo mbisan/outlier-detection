@@ -63,8 +63,6 @@ class Wrapper(LightningModule):
 
         loss = nn.functional.cross_entropy(out, label, ignore_index=100)
 
-        out_proba = out.softmax(dim=1)
-        self.jaccard_index.update(out_proba, label)
         self.log(
             "train_loss", loss, on_epoch=True,
             on_step=True, prog_bar=True, logger=True)
@@ -105,12 +103,6 @@ class Wrapper(LightningModule):
         self.log(
             "val_miou", self.jaccard_index, on_epoch=True,
             on_step=False, prog_bar=True, logger=True)
-        # self.log(
-        #     "val_auroc", self.auroc, on_epoch=True,
-        #     on_step=False, prog_bar=True, logger=True)
-        # self.log(
-        #     "val_ap", self.average_precision, on_epoch=True,
-        #     on_step=False, prog_bar=True, logger=True)
 
         return loss
 
@@ -123,12 +115,6 @@ class Wrapper(LightningModule):
             on_step=False, prog_bar=True, logger=True)
         self.log(
             "test_miou", self.jaccard_index, on_epoch=True,
-            on_step=False, prog_bar=True, logger=True)
-        self.log(
-            "test_auroc", self.auroc, on_epoch=True,
-            on_step=False, prog_bar=True, logger=True)
-        self.log(
-            "test_ap", self.average_precision, on_epoch=True,
             on_step=False, prog_bar=True, logger=True)
 
         return loss
