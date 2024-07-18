@@ -21,13 +21,47 @@ python3 compute_means_and_variances.py --dataset SHIFT --checkpoint ./pretrained
 
 python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/shift_weights.ckpt --ood_scores max_logits
 python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/shift_weights.ckpt --ood_scores unnormalized_likelihood
+
 python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/shift_weights.ckpt --ood_scores sml_ml
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/shift_weights.ckpt --ood_scores sml_ml --boundary_suppresion
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/shift_weights.ckpt --ood_scores sml_ml --dilated_smoothing
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/shift_weights.ckpt --ood_scores sml_ml --boundary_suppresion --dilated_smoothing
+
 python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/shift_weights.ckpt --ood_scores sml_ul
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/shift_weights.ckpt --ood_scores sml_ul --boundary_suppresion
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/shift_weights.ckpt --ood_scores sml_ul --dilated_smoothing
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/shift_weights.ckpt --ood_scores sml_ul --boundary_suppresion --dilated_smoothing
 
 python3 compute_means_and_variances.py --dataset SHIFT --checkpoint ./test_shift_good/shift_ood.ckpt --ood_scores max_logits
 python3 compute_means_and_variances.py --dataset SHIFT --checkpoint ./test_shift_good/shift_ood.ckpt --ood_scores unnormalized_likelihood
 
 python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_ood.ckpt --ood_scores max_logits
 python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_ood.ckpt --ood_scores unnormalized_likelihood
+
 python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_ood.ckpt --ood_scores sml_ml
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_ood.ckpt --ood_scores sml_ml --boundary_suppresion
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_ood.ckpt --ood_scores sml_ml --dilated_smoothing
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_ood.ckpt --ood_scores sml_ml --boundary_suppresion --dilated_smoothing
+
 python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_ood.ckpt --ood_scores sml_ul
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_ood.ckpt --ood_scores sml_ul --boundary_suppresion
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_ood.ckpt --ood_scores sml_ul --dilated_smoothing
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_ood.ckpt --ood_scores sml_ul --boundary_suppresion --dilated_smoothing
+
+### 
+
+python3 compute_means_and_variances.py --dataset SHIFT --checkpoint ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores max_logits
+python3 compute_means_and_variances.py --dataset SHIFT --checkpoint ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores unnormalized_likelihood
+
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores max_logits
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores unnormalized_likelihood
+
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores sml_ml
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores sml_ml --boundary_suppresion
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores sml_ml --dilated_smoothing
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores sml_ml --boundary_suppresion --dilated_smoothing
+
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores sml_ul
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores sml_ul --boundary_suppresion
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores sml_ul --dilated_smoothing
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/shift_1epoch_ood.ckpt --ood_scores sml_ul --boundary_suppresion --dilated_smoothing

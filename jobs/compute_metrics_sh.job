@@ -21,13 +21,29 @@ python3 compute_means_and_variances.py --dataset StreetHazards --checkpoint ./pr
 
 python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores max_logits
 python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores unnormalized_likelihood
+
 python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores sml_ml
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores sml_ml --boundary_suppresion
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores sml_ml --dilated_smoothing
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores sml_ml --boundary_suppresion --dilated_smoothing
+
 python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores sml_ul
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores sml_ul --boundary_suppresion
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores sml_ul --dilated_smoothing
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./pretrained/sh_weights.ckpt --ood_scores sml_ul --boundary_suppresion --dilated_smoothing
 
 python3 compute_means_and_variances.py --dataset StreetHazards --checkpoint ./test_sh_good/sh_ood.ckpt --ood_scores max_logits
 python3 compute_means_and_variances.py --dataset StreetHazards --checkpoint ./test_sh_good/sh_ood.ckpt --ood_scores unnormalized_likelihood
 
 python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores max_logits
 python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores unnormalized_likelihood
+
 python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores sml_ml
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores sml_ml --boundary_suppresion
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores sml_ml --dilated_smoothing
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores sml_ml --boundary_suppresion --dilated_smoothing
+
 python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores sml_ul
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores sml_ul --boundary_suppresion
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores sml_ul --dilated_smoothing
+python3 compute_ood_performance.py --dataset StreetHazards --checkpoint_dir ./test_sh_good/sh_ood.ckpt --ood_scores sml_ul --boundary_suppresion --dilated_smoothing

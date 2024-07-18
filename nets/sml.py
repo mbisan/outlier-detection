@@ -62,6 +62,10 @@ def unnormalized_likelihood(logits: torch.Tensor) -> torch.Tensor:
 
 class SMLWithPostProcessing(nn.Module):
 
+    '''
+    Module that produces standardized max logits from the segmentation logits
+    '''
+
     def __init__(
             self,
             means: torch.Tensor,
