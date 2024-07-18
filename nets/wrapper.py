@@ -70,13 +70,7 @@ class Wrapper(LightningModule):
             on_step=True, prog_bar=True, logger=True)
 
         if self.additional_loss:
-            logits_nwhc = out.permute((0, 2, 3, 1))
-            n, c, w, h = out.shape
-            logits_incorrect_nwhc = torch.ones_like(logits_nwhc, dtype=bool)
-            logits_incorrect_nwhc.scatter_(3, label.unsqueeze(-1), 0)
-            logits_incorrect = logits_nwhc[logits_incorrect_nwhc].reshape((n, w, h, c-1))
-
-            mean_negatives = (logits_incorrect - logits_incorrect.mean(-1, keepdim=True)).square().sum(-1).mean()
+            mean_negatives = out.square().sum(1).mean() # this penalization will penalize large logit values
 
             return loss.float() + 0.001 * mean_negatives
 

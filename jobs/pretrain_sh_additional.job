@@ -7,7 +7,7 @@
 #SBATCH --gres=gpu:1
 #SBATCH --constraint=rtx3090
 #SBATCH --time=1-00:00:00
-#SBATCH --job-name=pretrain_shift_additional_loss
+#SBATCH --job-name=pretrain_sh_additional_loss
 #SBATCH --output=O-%x.%j.out
 #SBATCH --error=E-%x.%j.err
 
