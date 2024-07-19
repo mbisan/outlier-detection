@@ -31,6 +31,8 @@ def load_model(checkpoint_dir):
     # pylint: disable=no-value-for-parameter
 
     loaded = torch.load(checkpoint_dir, map_location="cuda" if torch.cuda.is_available() else "cpu")
+    if "state_dict" in loaded:
+        loaded = loaded["state_dict"]
     num_classes = loaded["model.classifier.classifier.3.weight"].shape[0]
     model = WrapperOod("resnet50", num_classes)
     model.load_state_dict(loaded)
