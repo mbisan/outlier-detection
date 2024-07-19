@@ -16,18 +16,18 @@ cd /scratch/mbikandi/outlier-detection
 source /scratch/mbikandi/.bashrc
 source activate dev2
 
-python3 compute_means_and_variances.py --dataset SHIFT --checkpoint ./pretrained/additional_loss.ckpt --ood_scores max_logits
-python3 compute_means_and_variances.py --dataset SHIFT --checkpoint ./pretrained/additional_loss.ckpt --ood_scores unnormalized_likelihood
+python3 compute_means_and_variances.py --dataset SHIFT --checkpoint ./test_shift_good/additional_loss.ckpt --ood_scores max_logits
+python3 compute_means_and_variances.py --dataset SHIFT --checkpoint ./test_shift_good/additional_loss.ckpt --ood_scores unnormalized_likelihood
 
-python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/additional_loss.ckpt --ood_scores max_logits
-python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/additional_loss.ckpt --ood_scores unnormalized_likelihood
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/additional_loss.ckpt --ood_scores max_logits
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/additional_loss.ckpt --ood_scores unnormalized_likelihood
 
-python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/additional_loss.ckpt --ood_scores sml_ml
-python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/additional_loss.ckpt --ood_scores sml_ml --boundary_suppresion
-python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/additional_loss.ckpt --ood_scores sml_ml --dilated_smoothing
-python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/additional_loss.ckpt --ood_scores sml_ml --boundary_suppresion --dilated_smoothing
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/additional_loss.ckpt --ood_scores sml_ml
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/additional_loss.ckpt --ood_scores sml_ml --boundary_suppression
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/additional_loss.ckpt --ood_scores sml_ml --dilated_smoothing
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/additional_loss.ckpt --ood_scores sml_ml --boundary_suppression --dilated_smoothing
 
-python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/additional_loss.ckpt --ood_scores sml_ul
-python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/additional_loss.ckpt --ood_scores sml_ul --boundary_suppresion
-python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/additional_loss.ckpt --ood_scores sml_ul --dilated_smoothing
-python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./pretrained/additional_loss.ckpt --ood_scores sml_ul --boundary_suppresion --dilated_smoothing
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/additional_loss.ckpt --ood_scores sml_ul
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/additional_loss.ckpt --ood_scores sml_ul --boundary_suppression
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/additional_loss.ckpt --ood_scores sml_ul --dilated_smoothing
+python3 compute_ood_performance.py --dataset SHIFT --checkpoint_dir ./test_shift_good/additional_loss.ckpt --ood_scores sml_ul --boundary_suppression --dilated_smoothing
