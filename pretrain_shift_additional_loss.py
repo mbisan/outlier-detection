@@ -25,6 +25,6 @@ ckpt = ModelCheckpoint(
 
 tr = Trainer(default_root_dir="./test_shift_additional_loss", accelerator="cuda",
         callbacks=[ckpt, LearningRateMonitor(logging_interval="epoch"),
-        TQDMProgressBar(refresh_rate=1)], max_epochs=20)
+        TQDMProgressBar(refresh_rate=1)], max_epochs=50)
 
 tr.fit(model=model, datamodule=dm)
