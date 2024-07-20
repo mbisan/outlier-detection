@@ -1,0 +1,71 @@
+#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64GB
+#SBATCH --gres=gpu:1
+#SBATCH --constraint=rtx3090
+#SBATCH --time=1-00:00:00
+#SBATCH --job-name=metrics_sh
+#SBATCH --output=O-%x.%j.out
+#SBATCH --error=E-%x.%j.err
+
+cd /scratch/mbikandi/outlier-detection
+
+source /scratch/mbikandi/.bashrc
+source activate dev2
+
+BASE_DIR="./all_models/"
+
+DATASET="StreetHazards"
+SH_MODELS=("pretrain_sh.ckpt" "pretrain_sh_additional_loss_6938.ckpt" "finetune_sh.ckpt" "finetune_sh_additional_loss_6883.ckpt")
+
+for MODEL in "${SH_MODELS[@]}"; do
+    echo $MODEL
+    echo $DATASET
+    echo "----"
+
+    python3 compute_means_and_variances.py --dataset $DATASET --checkpoint $BASE_DIR$MODEL --ood_scores max_logits
+    python3 compute_means_and_variances.py --dataset $DATASET --checkpoint $BASE_DIR$MODEL --ood_scores unnormalized_likelihood
+
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores max_logits
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores unnormalized_likelihood
+
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml --boundary_suppresion
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml --dilated_smoothing
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml --boundary_suppresion --dilated_smoothing
+
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul --boundary_suppresion
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul --dilated_smoothing
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul --boundary_suppresion --dilated_smoothing
+
+done
+
+DATASET="SHIFT"
+SHIFT_MODELS=("pretrain_shift.ckpt" "pretrain_shift_additional_loss_8608.ckpt" "finetune_shift.ckpt" "finetune_shift_additional_loss_8551.ckpt")
+
+for MODEL in "${SHIFT_MODELS[@]}"; do
+    echo $MODEL
+    echo $DATASET
+    echo "----"
+
+    python3 compute_means_and_variances.py --dataset $DATASET --checkpoint $BASE_DIR$MODEL --ood_scores max_logits
+    python3 compute_means_and_variances.py --dataset $DATASET --checkpoint $BASE_DIR$MODEL --ood_scores unnormalized_likelihood
+
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores max_logits
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores unnormalized_likelihood
+
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml --boundary_suppresion
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml --dilated_smoothing
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml --boundary_suppresion --dilated_smoothing
+
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul --boundary_suppresion
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul --dilated_smoothing
+    python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul --boundary_suppresion --dilated_smoothing
+
+done
