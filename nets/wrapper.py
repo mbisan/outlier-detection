@@ -71,7 +71,7 @@ class Wrapper(LightningModule):
 
         if self.additional_loss:
             correct_mask = nn.functional.one_hot(label, num_classes=out.shape[1]).bool().permute((0, 3, 1, 2))
-            mean_negatives = out[~correct_mask].square().sum(1).mean() # this penalization will penalize large logit values
+            mean_negatives = out[~correct_mask].square().mean() # this penalization will penalize large logit values
 
             return loss.float() + 0.001 * mean_negatives
 
