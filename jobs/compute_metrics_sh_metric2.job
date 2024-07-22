@@ -1,0 +1,42 @@
+#!/bin/bash
+
+#SBATCH --nodes=1
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=64GB
+#SBATCH --gres=gpu:1
+#SBATCH --constraint=rtx3090
+#SBATCH --time=1-00:00:00
+#SBATCH --job-name=metrics_sh_2
+#SBATCH --output=O-%x.%j.out
+#SBATCH --error=E-%x.%j.err
+
+cd /scratch/mbikandi/outlier-detection
+
+source /scratch/mbikandi/.bashrc
+source activate dev2
+
+BASE_DIR="./test_sh_additional_loss/lightning_logs/version_1/checkpoints/"
+
+DATASET="StreetHazards"
+MODEL="last.ckpt"
+
+echo $MODEL
+echo $DATASET
+echo "----"
+
+python3 compute_means_and_variances.py --dataset $DATASET --checkpoint $BASE_DIR$MODEL --ood_scores max_logits
+python3 compute_means_and_variances.py --dataset $DATASET --checkpoint $BASE_DIR$MODEL --ood_scores unnormalized_likelihood
+
+python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores max_logits
+python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores unnormalized_likelihood
+
+python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml
+python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml --boundary_suppresion
+python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml --dilated_smoothing
+python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ml --boundary_suppresion --dilated_smoothing
+
+python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul
+python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul --boundary_suppresion
+python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul --dilated_smoothing
+python3 compute_ood_performance.py --dataset $DATASET --checkpoint_dir $BASE_DIR$MODEL --ood_scores sml_ul --boundary_suppresion --dilated_smoothing
